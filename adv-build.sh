@@ -352,7 +352,7 @@ function patch_things() {
 					fi
 				bash generate.sh "$treble_generate"
 			)
-		bash "$(dirname "$0")/apply-patches.sh" "$repodir"
+		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
 	else
 		(
 			cd device/phh/treble
@@ -401,11 +401,6 @@ if [[ "$python" == *"3."* ]]; then
 fi
 
 init_release
-
-if [[ $localManifestBranch != "android-8.1" ]]; then
-echo "! Pie Isnt Supported (For NOW), Exiting.."
-exit 1
-fi
 
 if [[ $choice == *"y"* ]];then
 	read -p "* Do you want to clean before sync? (y/N) " choicec

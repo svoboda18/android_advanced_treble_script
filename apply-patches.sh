@@ -4,6 +4,10 @@ set -e
 repo="$(readlink -f -- $1)"
 patches="$(readlink -f -- $0 |sed -e 's/apply-patches.sh//g')patches"
 
+case "$3" in
+	android-8.1) oe="$patches/oreo" ; patches="$oe"
+	android-9.0) pe="$patches/pie" ; patches="$pe"
+
 for project in $(cd $patches; echo *);do
 	p="$(tr _ / <<<$project |sed -e 's;platform/;;g')"
 	[ "$p" == build ] && p=build/make
