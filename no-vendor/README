@@ -1,0 +1,55 @@
+This experiment tries to make a partition table inside a partition using a loopback device.
+This makes it possible to sub-partition a "system" partition into "system" and "vendor"
+and even "oem" "odm" "factory", or whatever can be useful.
+
+Steps:
+- Apply platform_system_core.diff to system/core
+- Apply platform_system_sepolicy.diff to system/policy #No neverallow harmed, so certifiable!
+- Create your new system partition:
+$ bash buildSystemGpt.sh system /where/is/your/original/system.img vendor /where/is/your/vendor.img
+- Flash the generated sytem-gpt as "system" partition (like fastboot flash system system-gpt)
+- Change dts, example:
+
+>   firmware: firmware {
+>           android {
+>                   compatible = "android,firmware";
+>                   fstab {
+>                           compatible = "android,fstab";
+>                           loop {
+>                                   compatible = "android,loop";
+>                                   dev = "/dev/block/platform/soc/7824900.sdhci/by-name/system";
+>                                   type = "loop";
+>                                   mnt_flags = "default";
+>                                   fsmgr_flags = "default";
+>                                   status = "ok";
+>                           };
+>                           vendor {
+>                                   compatible = "android,vendor";
+>                                   dev = "/dev/block/loop/loop/by-name/vendor";
+>                                   type = "ext4";
+>                                   mnt_flags = "ro,barrier=1";
+>                                   fsmgr_flags = "wait";
+>                                   status = "ok";
+>                           };
+>                           system {
+>                                   compatible = "android,system";
+>                                   dev = "/dev/block/loop/loop/by-name/system";
+>                                   type = "ext4";
+>                                   mnt_flags = "ro,barrier=1";
+>                                   fsmgr_flags = "wait";
+>                                   status = "ok";
+>                           };
+>
+>                   };
+>           };
+>   };
+
+Notes:
+- example here lists only system/vendor, but it applies for any partition, like future odm/oem/factory partitions
+- The changes are quite horrible at the moment, but it's okay for google certification
+- This has been tested on an A-only device, with AOSP 8.1 system.img, CAF 8.0 vendor.img
+- platform_system_core.diff will change boot.img
+- platform_system_sepolicy.diff will change vendor.img
+
+TODO:
+- recovery support not implemented yet

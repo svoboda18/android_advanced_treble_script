@@ -1,0 +1,41 @@
+From 676455065ffba83b1489b0da65bc9416bce5ded1 Mon Sep 17 00:00:00 2001
+From: svoboda18 <ruspam18@gmail.com>
+Date: Thu, 7 Feb 2019 22:06:26 +0000
+Subject: [PATCH] Fix Recent apps switcher on mtk
+
+Change-Id: Ib019aedb15ae4a1ac0a8f406768eb6000bf1e290
+
+diff --git a/data/keyboards/Generic.kl b/data/keyboards/Generic.kl
+index 2a10bdd46d0..99aefceef0f 100644
+--- a/data/keyboards/Generic.kl
++++ b/data/keyboards/Generic.kl
+@@ -146,7 +146,7 @@ key 123   EISU
+ key 124   YEN
+ key 125   META_LEFT
+ key 126   META_RIGHT
+-key 127   MENU
++key 127   APP_SWITCH
+ key 128   MEDIA_STOP
+ # key 129 "KEY_AGAIN"
+ # key 130 "KEY_PROPS"
+@@ -158,7 +158,7 @@ key 135   PASTE
+ # key 136 "KEY_FIND"
+ key 137   CUT
+ # key 138 "KEY_HELP"
+-key 139   MENU
++key 139   APP_SWITCH
+ key 140   CALCULATOR
+ # key 141 "KEY_SETUP"
+ key 142   SLEEP
+@@ -404,7 +404,7 @@ key 484   B                 FUNCTION
+ # key 503 KEY_BRL_DOT7
+ # key 504 KEY_BRL_DOT8
+ 
+-key 580   APP_SWITCH
++key 580   MENU
+ key 582   VOICE_ASSIST
+ 
+ # Keys defined by HID usages
+-- 
+2.17.1
+
