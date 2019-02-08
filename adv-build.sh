@@ -57,6 +57,10 @@ ROM types:
   lineage151
   lineage160
   rr
+  bliss81
+  bliss90
+  xpe12.1
+  xpe13.0
   pixel81
   pixel90
   crdroid
@@ -150,6 +154,34 @@ function get_rom_type() {
                 treble_generate="rr"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
+	    bliss81)
+		mainrepo="https://github.com/BlissRoms/platform_manifest.git"
+		mainbranch="o-8.1"
+		localManifestBranch="android-8.1"
+		treble_generate="bliss"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+	    bliss90)
+		mainrepo="https://github.com/BlissRoms/platform_manifest.git"
+		mainbranch="p-9.0"
+		localManifestBranch="android-9.0"
+		treble_generate="bliss"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+	    xpe81)
+		mainrepo="https://github.com/TheXPerienceProject/Manifest.git"
+		mainbranch="xpe-12.1"
+		localManifestBranch="android-8.1"
+		treble_generate="xpe"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+	    xpe90)
+		mainrepo="https://github.com/TheXPerienceProject/Manifest.git"
+		mainbranch="xpe-13.0"
+		localManifestBranch="android-9.0"
+		treble_generate="xpe"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
             pixel81)
                 mainrepo="https://github.com/PixelExperience/manifest.git"
                 mainbranch="oreo-mr1"
