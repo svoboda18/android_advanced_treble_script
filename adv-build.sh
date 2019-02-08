@@ -412,9 +412,21 @@ function patch_things() {
 	fi
 }
 
+function check_dex() {
+# on userdebug, disable pre-opt (odex)
+read -p "* Do you want to pre-opt rom apps? (y/N) " dexa
+if [[ "$dexa" == *"y"* ]]; then
+	chmod 666 device/phh/treble/board-base.mk
+	echo "WITH_DEXPREOPT := false" >> device/phh/treble/board-base.mk
+	echo "DISABLE_DEXPREOPT := true" >> device/phh/treble/board-base.mk
+	echo "DONT_DEXPREOPT_PREBUILTS := true" >> device/phh/treble/board-base.mk
+	echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
+fi
+}
+
 function build_variant() {
-     read -p "* Do you want to clean before starting build? (y/N) " choicer
-     if [[ $choicer == *"y"* ]];then
+    read -p "* Do you want to clean before starting build? (y/N) " choicer
+    if [[ $choicer == *"y"* ]];then
      make installclean
     fi
     lunch "$1"
@@ -462,6 +474,8 @@ read -p "- Do you want to patch? (y/N) " choice2
 if [[ $choice2 == *"y"* ]];then
 	patch_things
 fi
+
+check_dex
 fix_missings
 add_mks
 add_files
