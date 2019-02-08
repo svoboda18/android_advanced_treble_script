@@ -3,6 +3,7 @@ set -e
 ## welcome
 function wc() {
 cat << EOF
+
 **************************************************
 *        ADVANCED TREBLE ROM BUILD SCRIPT        *
 **************************************************
@@ -12,6 +13,7 @@ cat << EOF
 **************************************************
 *      Created By SaMad SegMane (svoboda18)      *
 **************************************************
+
 EOF
 }
 
@@ -367,6 +369,18 @@ function add_mks() {
 	cp -r $(dirname "$0")/mks/. device/phh/treble
 }
 
+function add_files() {
+	if [[ "$localManifestBranch" == *"9"* ]]; then
+		rm -r device/phh/treble/cmds/Android.bp
+		cp -r $(dirname "$0")/rfiles/cmdsbp device/phh/treble/cmds/Android.bp
+
+		# fix kernel source missing (on lineage)
+		if [[ "$treble_generate" == "lineage" ]]; then
+		sed 's;.*KERNEL_;//&;' -i vendor/lineage/build/soong/Android.bp
+		fi
+	fi
+}
+
 function fix_missings() {
 	wget -O apns-full-conf.xml https://github.com/LineageOS/android_vendor_lineage/raw/lineage-16.0/prebuilt/common/etc/apns-conf.xml 2>/dev/null
 	mkdir -p device/sample/etc
@@ -399,11 +413,10 @@ function patch_things() {
 }
 
 function build_variant() {
-#    read -p "* Do you want to clean before starting build? (y/N) " choicer
-#    if [[ $choicer == *"y"* ]];then
-#    make installclean
-#    make clean
-#    fi
+     read -p "* Do you want to clean before starting build? (y/N) " choicer
+     if [[ $choicer == *"y"* ]];then
+     make installclean ; make clean || echo "! Clound not clean, restart the build process without cleaning" ; exit 1
+    fi
     lunch "$1"
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
     cp "$OUT"/system.img release/"$rom_fp"/system-"$2".img
@@ -451,6 +464,7 @@ if [[ $choice2 == *"y"* ]];then
 fi
 fix_missings
 add_mks
+add_files
 
 read -p "- Do you want to start build now? (y/N) " choice3
 if [[ $choice3 == *"y"* ]];then

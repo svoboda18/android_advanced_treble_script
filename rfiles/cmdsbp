@@ -1,0 +1,26 @@
+cc_binary {
+	name: "lightsctl",
+	srcs: [
+		"lightsctl.cpp",
+	],
+	shared_libs: [
+		"android.hardware.light@2.0",
+		"libutils",
+		"libhidlbase",
+	],
+}
+
+cc_binary {
+	name: "uevent",
+	srcs: [
+		"uevent.cpp",
+	],
+}
+
+cc_binary {
+	name: "simg2img_simple",
+	srcs: [
+		"simg2img_simple.cpp",
+	],
+	host_supported: true,
+}
