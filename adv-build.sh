@@ -52,6 +52,7 @@ ROM types:
   aosp81
   aosp90
   carbon
+  e-1.0
   e-0.2
   lineage151
   lineage160
@@ -118,6 +119,13 @@ function get_rom_type() {
                 treble_generate="carbon"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
+	    e-1.0)
+		mainrepo="https://gitlab.e.foundation/e/os/android/"
+		mainbranch="v1-oreo"
+		localManifestBranch="android-8.1"
+		treble_generate="lineage"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
             e-0.2)
                 mainrepo="https://gitlab.e.foundation/e/os/android/"
                 mainbranch="eelo-0.2"
@@ -360,9 +368,10 @@ function add_mks() {
 }
 
 function fix_missings() {
-	wget -O apns-full-conf.xml https://github.com/LineageOS/android_vendor_lineage/raw/lineage-16.0/prebuilt/common/etc/apns-conf.xml
+	wget -O apns-full-conf.xml https://github.com/LineageOS/android_vendor_lineage/raw/lineage-16.0/prebuilt/common/etc/apns-conf.xml 2>/dev/null
 	mkdir -p device/sample/etc
        	cp -r apns-full-conf.xml device/sample/etc/
+	rm -rf apns*.xml
 }
  
 function patch_things() {
@@ -426,7 +435,7 @@ fi
 
 init_release
 
-if [[ $choice == *"y"* ]];then
+if [[ "$choice" == *"y"* ]];then
 	read -p "* Do you want to clean before sync? (y/N) " choicec
 	if [[ $choicec == *"y"* ]];then
 		clean_repo_folder
