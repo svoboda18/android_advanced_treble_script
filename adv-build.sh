@@ -415,7 +415,7 @@ function patch_things() {
 function build_variant() {
      read -p "* Do you want to clean before starting build? (y/N) " choicer
      if [[ $choicer == *"y"* ]];then
-     make installclean ; make clean || echo "! Clound not clean, restart the build process without cleaning" ; exit 1
+     make installclean
     fi
     lunch "$1"
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
