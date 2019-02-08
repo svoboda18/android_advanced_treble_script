@@ -49,7 +49,6 @@ Options:
 
 ROM types:
 
-  aosp80
   aosp81
   aosp90
   carbon
@@ -59,8 +58,8 @@ ROM types:
   rr
   bliss81
   bliss90
-  xpe12.1
-  xpe13.0
+  xpe81
+  xpe90
   pixel81
   pixel90
   crdroid
@@ -98,13 +97,6 @@ EOF
 function get_rom_type() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            aosp80)
-                mainrepo="https://android.googlesource.com/platform/manifest.git"
-                mainbranch="android-vts-8.0_r4"
-                localManifestBranch="master"
-                treble_generate=""
-                extra_make_options=""
-                ;;
             aosp81)
                 mainrepo="https://android.googlesource.com/platform/manifest.git"
                 mainbranch="android-8.1.0_r48"
