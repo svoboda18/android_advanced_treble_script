@@ -374,10 +374,8 @@ function add_files() {
 		rm -r device/phh/treble/cmds/Android.bp
 		cp -r $(dirname "$0")/rfiles/cmdsbp device/phh/treble/cmds/Android.bp
 
-		# fix kernel source missing (on lineage)
-		if [[ "$treble_generate" == "lineage" ]]; then
-		sed 's;.*KERNEL_;//&;' -i vendor/lineage/build/soong/Android.bp
-		fi
+		# fix kernel source missing (on pie)
+		sed 's;.*KERNEL_;//&;' -i vendor/$treble_generate/build/soong/Android.bp
 	fi
 }
 
@@ -416,11 +414,14 @@ function check_dex() {
 # on userdebug, disable pre-opt (odex)
 read -p "* Do you want to disable pre-opt rom apps? (y/N) " dexa
 if [[ "$dexa" == *"y"* ]]; then
-	chmod 666 device/phh/treble/board-base.mk
-	echo "WITH_DEXPREOPT := false" >> device/phh/treble/board-base.mk
-	echo "DISABLE_DEXPREOPT := true" >> device/phh/treble/board-base.mk
-	echo "DONT_DEXPREOPT_PREBUILTS := true" >> device/phh/treble/board-base.mk
-	echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
+	if [ ! -f /device/phh/treble/adv ]; then
+		touch device/phh/treble/adv
+		chmod 666 device/phh/treble/board-base.mk
+		echo "WITH_DEXPREOPT := false" >> device/phh/treble/board-base.mk
+		echo "DISABLE_DEXPREOPT := true" >> device/phh/treble/board-base.mk
+		echo "DONT_DEXPREOPT_PREBUILTS := true" >> device/phh/treble/board-base.mk
+		echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
+	fi
 else
 	wget -O board-base.mk.bak https://github.com/phhusson/device_phh_treble/raw/android-9.0/board-base.mk 2>/dev/null
 	rm -f device/phh/treble/board-base.mk ; cp -r board-base.mk.bak device/phh/treble/board-base.mk
