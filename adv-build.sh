@@ -414,16 +414,16 @@ function patch_things() {
 
 function check_dex() {
 # on userdebug, disable pre-opt (odex)
-read -p "* Do you want to disable  pre-opt rom apps? (y/N) " dexa
+read -p "* Do you want to disable pre-opt rom apps? (y/N) " dexa
 if [[ "$dexa" == *"y"* ]]; then
 	chmod 666 device/phh/treble/board-base.mk
-	cp device/phh/treble/board-base.mk board-base.mk.bak
 	echo "WITH_DEXPREOPT := false" >> device/phh/treble/board-base.mk
 	echo "DISABLE_DEXPREOPT := true" >> device/phh/treble/board-base.mk
 	echo "DONT_DEXPREOPT_PREBUILTS := true" >> device/phh/treble/board-base.mk
 	echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
 else
-	[ -f board-base.mk.bak ] && rm -f device/phh/treble/board-base.mk ; cp -r board-base.mk.bak device/phh/treble/board-base.mk
+	wget -O board-base.mk.bak https://github.com/phhusson/device_phh_treble/raw/android-9.0/board-base.mk 2>/dev/null
+	rm -f device/phh/treble/board-base.mk ; cp -r board-base.mk.bak device/phh/treble/board-base.mk
 fi
 }
 
