@@ -72,7 +72,8 @@ ROM types:
   aex90
   aex81
   slim
-  havoc
+  havoc81
+  havoc90
 
 Variants are dash-joined combinations of (in order):
 * processor type
@@ -247,7 +248,14 @@ function get_rom_type() {
                 treble_generate="slim"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
-	   havoc)
+	    havoc81)
+		mainrepo="https://github.com/Havoc-OS/android_manifest.git"
+		mainbranch="oreo"
+		localManifestBranch="android-8.1"
+		treble_generate="havoc"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+	    havoc90)
                 mainrepo="https://github.com/Havoc-OS/android_manifest.git"
                 mainbranch="pie"
                 localManifestBranch="android-9.0"
@@ -487,7 +495,7 @@ read -p "- Do you want to start build now? (y/N) " choice3
 if [[ $choice3 == *"y"* ]];then
 	check_dex
 	jack_env
-	source build/envsetup.sh
+        . build/envsetup.sh
 	for (( idx=0; idx < ${#variant_codes[*]}; idx++ )); do
 		build_variant "${variant_codes[$idx]}" "${variant_names[$idx]}"
 	done
