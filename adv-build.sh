@@ -157,6 +157,17 @@ function get_rom_type() {
                 treble_generate="rr"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
+	    dot81)
+		mainrepo="https://github.com/DotOS/manifest.git"
+		mainbranch="dot-o"
+		localManifestBranch="android-8.1"
+		treble_generate=""
+		gen_mk="dot"
+		gen_target="treble"
+		gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
+		gen_sepolicy='$(call inherit-product, device/aosp/sepolicy/common/sepolicy.mk)'
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
 	    bliss81)
 		mainrepo="https://github.com/BlissRoms/platform_manifest.git"
 		mainbranch="o-8.1"
@@ -359,7 +370,6 @@ function clone_or_checkout() {
 }
 
 function init_local_manifest() {
-	clone_or_checkout vendor/hardware_overlay vendor_hardware_overlay master
 	clone_or_checkout device/phh/treble device_phh_treble
         clone_or_checkout vendor/vndk vendor_vndk master
         sed '/hardware_overlay/d' -i device/phh/treble/base.mk
@@ -400,40 +410,55 @@ function patch_things() {
 		rm -f device/*/sepolicy/common/private/genfs_contexts
 			(
 				cd device/phh/treble
-				    if [[ $choice == *"y"* ]];then
 			        git clean -fdx
-					fi
 				bash generate.sh "$treble_generate"
+				cd ../../..
 			)
 		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
-	else
-		(
-			cd device/phh/treble
-			git clean -fdx
-			bash generate.sh
-		)
-	repo manifest -r > release/"$rom_fp"/manifest.xml
-	zip -r9 patches.zip "$(dirname "$0")/patches"
-	cp patches.zip release/"$rom_fp"/patches.zip
+	elif [[ -n "$gen_mk" ]]; then
+		cd device/phh/treble
+		bash generate.sh
+		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
+		cd ../../..
+	fi
+}
+
+function gen_mk() {
+	if [[ -n "$gen_mk" ]]; then
+		ldir=${PWD}
+		cd device/phh/treble
+		cp $treble_var.mk $gen_mk.mk
+		sed '/PRODUCT_NAME/d' -i $gen_mk.mk
+		echo "PRODUCT_NAME := ${gen_mk}_$gen_target" >> $gen_mk.mk
+		lunch_mk=${gen_mk}_${gen_target}
+		[ ! -z "$gen_sepolicy" ] && {
+			(echo "$gen_sepolicy" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
+			rm -f $gen_mk.mk ; mv $gen_mk.mk2 $gen_mk.mk
+		}
+		[ ! -z "$gen_config" ] && {
+			(echo "$gen_config" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
+			rm -f $gen_mk.mk ; mv $gen_mk.mk2 $gen_mk.mk
+		}
+		cd $ldir
 	fi
 }
 
 function check_dex() {
-# on userdebug, disable pre-opt (odex)
-read -p "* Do you want to disable pre-opt rom apps? (y/N) " dexa
-if [[ "$dexa" == *"y"* ]]; then
-	if [ ! -f /device/phh/treble/adv ]; then
-		touch device/phh/treble/adv
-		chmod 666 device/phh/treble/board-base.mk
-		echo "WITH_DEXPREOPT := false" >> device/phh/treble/board-base.mk
-		echo "DISABLE_DEXPREOPT := true" >> device/phh/treble/board-base.mk
-		echo "DONT_DEXPREOPT_PREBUILTS := true" >> device/phh/treble/board-base.mk
-		echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
+	# on userdebug, disable pre-opt (odex)
+	read -p "* Do you want to disable pre-opt rom apps? (y/N) " dexa
+	if [[ "$dexa" == *"y"* ]]; then
+		if [ ! -f /device/phh/treble/adv ]; then
+			touch device/phh/treble/adv
+			chmod 666 device/phh/treble/board-base.mk
+			echo "WITH_DEXPREOPT := false" >> device/phh/treble/board-base.mk
+			echo "DISABLE_DEXPREOPT := true" >> device/phh/treble/board-base.mk
+			echo "DONT_DEXPREOPT_PREBUILTS := true" >> device/phh/treble/board-base.mk
+			echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
+		fi
+	else
+		wget -O board-base.mk.bak https://github.com/phhusson/device_phh_treble/raw/android-9.0/board-base.mk 2>/dev/null
+		rm -f device/phh/treble/board-base.mk ; cp -r board-base.mk.bak device/phh/treble/board-base.mk
 	fi
-else
-	wget -O board-base.mk.bak https://github.com/phhusson/device_phh_treble/raw/android-9.0/board-base.mk 2>/dev/null
-	rm -f device/phh/treble/board-base.mk ; cp -r board-base.mk.bak device/phh/treble/board-base.mk
-fi
 }
 
 function build_variant() {
@@ -441,8 +466,8 @@ function build_variant() {
     if [[ $choicer == *"y"* ]];then
      make installclean
     fi
-    lunch "$1"
-    make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
+    [[ -n "$lunch_mk" ]] && lunch "$lunch_mk" || lunch "$1"
+    make $extra_make_options ANDROID_COMPILE_WITH_JACK:=false  BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
     cp "$OUT"/system.img release/"$rom_fp"/system-"$2".img
 }
 
@@ -456,6 +481,10 @@ function jack_env() {
 parse_options "$@"
 get_rom_type "$@"
 get_variants "$@"
+
+treble_var=$(echo "$variant_codes[${#variant_codes}]" | sed 's@-.*@@')
+
+gen_mk
 
 if [[ -z "$mainrepo" || ${#variant_codes[*]} -eq 0 ]]; then
     >&2 help
