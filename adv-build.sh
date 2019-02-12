@@ -51,12 +51,14 @@ ROM types:
   aosp90
   aospa81
   aospa90
-  carbon
+  carbon81
+  carbon90
   e-1.0
   e-0.2
   lineage151
   lineage160
   rr81
+  rr90
   dot81
   dot90
   du81
@@ -67,13 +69,18 @@ ROM types:
   xpe90
   pixel81
   pixel90
-  crdroid
-  mokee
-  aicp
-  aokp
+  crdroid81
+  crdroid90
+  mokee81
+  mokee90
+  aicp81
+  aicp90
+  aokp81
+  aokp90
   aex90
   aex81
-  slim
+  slim81
+  slim90
   havoc81
   havoc90
 
@@ -117,13 +124,20 @@ function get_rom_type() {
                 treble_generate=""
                 extra_make_options=""
                 ;;
-            carbon)
+	    carbon81)
                 mainrepo="https://github.com/CarbonROM/android.git"
                 mainbranch="cr-6.1"
                 localManifestBranch="android-8.1"
                 treble_generate="carbon"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
+	    carbon90)
+		mainrepo="https://github.com/CarbonROM/android.git"
+		mainbranch="cr-7.0"
+		localManifestBranch="android-9.0"
+		treble_generate="carbon"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
 	    e-1.0)
 		mainrepo="https://gitlab.e.foundation/e/os/android/"
 		mainbranch="v1-oreo"
@@ -159,6 +173,13 @@ function get_rom_type() {
                 treble_generate="rr"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
+	    rr90)
+		mainrepo="https://github.com/ResurrectionRemix/platform_manifest.git"
+		mainbranch="pie"
+		localManifestBranch="android-9.0"
+		treble_generate="rr"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
 	    dot81)
 		mainrepo="https://github.com/DotOS/manifest.git"
 		mainbranch="dot-o"
@@ -251,34 +272,62 @@ function get_rom_type() {
                 treble_generate="pixel"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
-            crdroid)
+            crdroid81)
                 mainrepo="https://github.com/crdroidandroid/android.git"
                 mainbranch="8.1"
                 localManifestBranch="android-8.1"
-                treble_generate="crdroid"
+                treble_generate="lineage"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
-            mokee)
+	    crdroid90)
+		mainrepo="https://github.com/crdroidandroid/android.git"
+		mainbranch="9.0"
+		localManifestBranch="android-9.0"
+		treble_generate="lineage"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+            mokee81)
                 mainrepo="https://github.com/MoKee/android.git"
                 mainbranch="mko-mr1"
                 localManifestBranch="android-8.1"
                 treble_generate="mokee"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
-            aicp)
+	    mokee90)
+		mainrepo="https://github.com/MoKee/android.git"
+		mainbranch="9.0"
+		localManifestBranch="android-9.0"
+		treble_generate="mokee"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+            aicp81)
                 mainrepo="https://github.com/AICP/platform_manifest.git"
                 mainbranch="o8.1"
                 localManifestBranch="android-8.1"
                 treble_generate="aicp"
                 extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-            aokp)
+		;;
+	    aicp90)
+		mainrepo="https://github.com/AICP/platform_manifest.git"
+		mainbranch="p9.0"
+		localManifestBranch="android-9.0"
+		treble_generate="aicp"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+            aokp81)
                 mainrepo="https://github.com/AOKP/platform_manifest.git"
                 mainbranch="oreo"
                 localManifestBranch="android-8.1"
                 treble_generate="aokp"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
+	    aokp90)
+		mainrepo="https://github.com/AOKP/platform_manifest.git"
+		mainbranch="9.0"
+		localManifestBranch="android-9.0"
+		treble_generate="aokp"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
             aex90)
                 mainrepo="https://github.com/AospExtended/manifest.git"
                 mainbranch="9.x"
@@ -293,13 +342,20 @@ function get_rom_type() {
                 treble_generate="aex"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
-            slim)
+            slim81)
                 mainrepo="https://github.com/SlimRoms/platform_manifest.git"
                 mainbranch="or8.1"
                 localManifestBranch="android-8.1"
                 treble_generate="slim"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
+	    slim90)
+		mainrepo="https://github.com/SlimRoms/platform_manifest.git"
+		mainbranch="9.0"
+		localManifestBranch="android-9.0"
+		treble_generate="slim"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
 	    havoc81)
 		mainrepo="https://github.com/Havoc-OS/android_manifest.git"
 		mainbranch="oreo"
@@ -435,6 +491,17 @@ function add_files() {
 		# fix kernel source missing (on pie)
 		sed 's;.*KERNEL_;//&;' -i vendor/$treble_generate/build/soong/Android.bp
 	fi
+	find $(dirname "$0")/rfiles/ -name '*.rc' -exec cp -prv '{}' 'device/phh/treble/' ';' &> /dev/null
+	find $(dirname "$0")/rfiles/ -name '*.sh' -exec cp -prv '{}' 'device/phh/treble/' ';' &> /dev/null
+
+	# add change_device_name to build
+	if ! grep -Eq 'change-device-name.sh' device/phh/treble/base.mk; then
+		(cat device/phh/treble/base.mk ; echo '
+PRODUCT_COPY_FILES += \
+	device/phh/treble/device.rc:system/etc/init/device.rc \
+	device/phh/treble/change-device-name.sh:system/bin/change-device-name.sh') | cat - >> device/phh/treble/base.mk2
+		rm -f device/phh/treble/base.mk ; mv device/phh/treble/base.mk2 device/phh/treble/base.mk
+	fi
 }
 
 function fix_missings() {
@@ -475,7 +542,6 @@ function gen_mk() {
 		[ ! -z "$gen_sepolicy" ] && {
 			(echo "$gen_sepolicy" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
 			rm -f $gen_mk.mk ; mv $gen_mk.mk2 $gen_mk.mk
-			echo " x"
 		}
 		[ ! -z "$gen_config" ] && {
 			(echo "$gen_config" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
