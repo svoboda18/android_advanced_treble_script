@@ -22,25 +22,21 @@ read -p "Press any key to continue.."
 
 if [ -z "$USER" ];then
 	    export USER="$(id -un)"
-    fi
-    export LC_ALL=C
+fi
 
-    ## set defaults
+export LC_ALL=C
 
-    rom_fp="$(date +%y%m%d)"
+rom_fp="$(date +%y%m%d)"
+myname="$(basename "$0")"
 
-    myname="$(basename "$0")"
-    if [[ $(uname -s) = "Darwin" ]];then
-	        jobs=$(sysctl -n hw.ncpu)
-	elif [[ $(uname -s) = "Linux" ]];then
-		    jobs=$(nproc --all)
-	    fi
+if [[ $(uname -s) = "Darwin" ]];then
+        jobs=$(sysctl -n hw.ncpu)
+elif [[ $(uname -s) = "Linux" ]];then
+	    jobs=$(nproc --all)
+fi
 
-	    ## handle command line arguments
-	    read -p "- Do you want to sync? (y/N) " choice
-
-	    function help() {
-		        cat <<EOF
+function help() {
+cat <<EOF
 Syntax:
 
   $myname [-j 2] <rom type> <variant>...
@@ -53,12 +49,18 @@ ROM types:
 
   aosp81
   aosp90
+  aospa81
+  aospa90
   carbon
   e-1.0
   e-0.2
   lineage151
   lineage160
-  rr
+  rr81
+  dot81
+  dot90
+  du81
+  du90
   bliss81
   bliss90
   xpe81
@@ -150,7 +152,7 @@ function get_rom_type() {
                 treble_generate="lineage"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
-            rr)
+            rr81)
                 mainrepo="https://github.com/ResurrectionRemix/platform_manifest.git"
                 mainbranch="oreo"
                 localManifestBranch="android-8.1"
@@ -165,7 +167,46 @@ function get_rom_type() {
 		gen_mk="dot"
 		gen_target="treble"
 		gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
-		gen_sepolicy='$(call inherit-product, device/aosp/sepolicy/common/sepolicy.mk)'
+		gen_sepolicy=""
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+	    dot90)
+		mainrepo="https://github.com/DotOS/manifest.git"
+		mainbranch="dot-p"
+		localManifestBranch="android-9.0"
+		treble_generate=""
+		gen_mk="dot"
+		gen_target="treble"
+		gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
+		gen_sepolicy=""
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+	    aospa81)
+		mainrepo="https://github.com/AOSPA/manifest.git"
+		mainbranch="oreo-mr1"
+		localManifestBranch="android-8.1"
+		treble_generate="aospa"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+	    aospa90)
+		mainrepo="https://github.com/AOSPA/manifest.git"
+		mainbranch="pie"
+		localManifestBranch="android-9.0"
+		treble_generate="aospa"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+	    du81)
+		mainrepo="https://github.com/DirtyUnicorns/android_manifest.git"
+		mainbranch="o8x"
+		localManifestBranch="android-8.1"
+		treble_generate="du"
+		extra_make_options="WITHOUT_CHECK_API=true"
+		;;
+	    du90)
+		mainrepo="https://github.com/DirtyUnicorns/android_manifest.git"
+		mainbranch="p9x"
+		localManifestBranch="android-9.0"
+		treble_generate="du"
 		extra_make_options="WITHOUT_CHECK_API=true"
 		;;
 	    bliss81)
@@ -238,14 +279,14 @@ function get_rom_type() {
                 treble_generate="aokp"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
-           aex90)
+            aex90)
                 mainrepo="https://github.com/AospExtended/manifest.git"
                 mainbranch="9.x"
                 localManifestBranch="android-9.0"
                 treble_generate="aex"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
- 	   aex81)
+ 	    aex81)
                 mainrepo="https://github.com/AospExtended/manifest.git"
                 mainbranch="8.1.x"
                 localManifestBranch="android-8.1"
@@ -339,8 +380,7 @@ function get_variants() {
         esac
         shift
     done
-}   
-## function that actually do things
+}
 
 function init_release() {
 	mkdir -p release/"$rom_fp"
@@ -415,11 +455,12 @@ function patch_things() {
 				cd ../../..
 			)
 		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
-	elif [[ -n "$gen_mk" ]]; then
+	else
 		cd device/phh/treble
 		bash generate.sh
 		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
 		cd ../../..
+	
 	fi
 }
 
@@ -434,6 +475,7 @@ function gen_mk() {
 		[ ! -z "$gen_sepolicy" ] && {
 			(echo "$gen_sepolicy" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
 			rm -f $gen_mk.mk ; mv $gen_mk.mk2 $gen_mk.mk
+			echo " x"
 		}
 		[ ! -z "$gen_config" ] && {
 			(echo "$gen_config" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
@@ -444,7 +486,6 @@ function gen_mk() {
 }
 
 function check_dex() {
-	# on userdebug, disable pre-opt (odex)
 	read -p "* Do you want to disable pre-opt rom apps? (y/N) " dexa
 	if [[ "$dexa" == *"y"* ]]; then
 		if [ ! -f /device/phh/treble/adv ]; then
@@ -468,7 +509,7 @@ function build_variant() {
     fi
     [[ -n "$lunch_mk" ]] && lunch "$lunch_mk" || lunch "$1"
     make $extra_make_options ANDROID_COMPILE_WITH_JACK:=false  BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
-    cp "$OUT"/system.img release/"$rom_fp"/system-"$2".img
+    [ -f "$OUT"/system.img ] && cp "$OUT"/system.img release/"$rom_fp"/system-"$2".img || echo -e "\n BUILD ERROR ! \n"
 }
 
 function jack_env() {
@@ -501,6 +542,7 @@ fi
 
 init_release
 
+read -p "- Do you want to sync? (y/N) " choice
 if [[ "$choice" == *"y"* ]];then
 	read -p "* Do you want to clean before sync? (y/N) " choicec
 	if [[ $choicec == *"y"* ]];then
