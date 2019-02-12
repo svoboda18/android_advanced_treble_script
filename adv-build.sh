@@ -1,6 +1,37 @@
 #!/bin/bash
+
+#
+# Copyright (C) 2019 by SaMad SegMane (svoboda18)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses
+#
+
+###############
+#             #
+#  VARIABLES  #
+#             #
+###############
+
 set -e
-## welcome
+ver=0.1
+
+###############
+#             #
+#  FUNCTIONS  #
+#             #
+###############
+
 function wc() {
 cat << EOF
 
@@ -15,13 +46,12 @@ cat << EOF
 **************************************************
 
 EOF
+read -p "Press any key to continue.."
 }
 
-wc
-read -p "Press any key to continue.."
-
+function prepre_env() {
 if [ -z "$USER" ];then
-	    export USER="$(id -un)"
+	export USER="$(id -un)"
 fi
 
 export LC_ALL=C
@@ -30,13 +60,18 @@ rom_fp="$(date +%y%m%d)"
 myname="$(basename "$0")"
 
 if [[ $(uname -s) = "Darwin" ]];then
-        jobs=$(sysctl -n hw.ncpu)
+	jobs=$(sysctl -n hw.ncpu)
 elif [[ $(uname -s) = "Linux" ]];then
-	    jobs=$(nproc --all)
+	jobs=$(nproc --all)
 fi
+}
 
 function help() {
 cat <<EOF
+Advanced Treble ROM Builder Script v$ver by SaMad SegMane (svoboda18)
+
+Usage Help:
+
 Syntax:
 
   $myname [-j 2] <rom type> <variant>...
@@ -85,25 +120,26 @@ ROM types:
   havoc90
 
 Variants are dash-joined combinations of (in order):
-* processor type
+- Processor type
   * "arm" for ARM 32 bit
   * "arm64" for ARM 64 bit
-* A or A/B partition layout ("aonly" or "ab")
-* GApps selection
+- A or A/B partition layout ("aonly" or "ab")
+- GApps selection
   * "vanilla" to not include GApps
   * "gapps" to include opengapps
   * "go" to include gapps go
   * "floss" to include floss
-* SU selection ("su" or "nosu")
-* Build variant selection (optional)
+- SU selection ("su" or "nosu")
+- Build variant selection (optional)
   * "eng" for eng build
   * "user" for prod build
   * "userdebug" for debug build (default)
 
-for example:
-
-* arm-aonly-vanilla-nosu-user
-* arm64-ab-gapps-su
+Examples:
+- Treble ROM For ARM-A Without Gapps And SU:
+  * arm-aonly-vanilla-nosu-user
+- Treble ROM For ARM64-AB With Gapps And SU:
+  * arm64-ab-gapps-su
 EOF
 }
 
@@ -370,6 +406,8 @@ function get_rom_type() {
                 treble_generate="havoc"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
+	    default)
+		echo -e "\nUnknown ROM type: $1\n" ; help ; exit 1
         esac
         shift
     done
@@ -400,7 +438,6 @@ gapps_selection_map[floss]=f
 declare -A su_selection_map
 su_selection_map[su]=S
 su_selection_map[nosu]=N
-
 function parse_variant() {
     local -a pieces
     IFS=- pieces=( $1 )
@@ -412,7 +449,7 @@ function parse_variant() {
     local build_type_selection=${pieces[4]}
 
     if [[ -z "$processor_type" || -z "$partition_layout" || -z "$gapps_selection" || -z "$su_selection" ]]; then
-        >&2 echo "Invalid variant '$1'"
+        >&2 echo -e "\nInvalid defined variant: $1 \n"
         >&2 help
         exit 2
     fi
@@ -554,9 +591,7 @@ function gen_mk() {
 function check_dex() {
 	read -p "* Do you want to disable pre-opt rom apps? (y/N) " dexa
 	if [[ "$dexa" == *"y"* ]]; then
-		if [ ! -f /device/phh/treble/adv ]; then
-			touch device/phh/treble/adv
-			chmod 666 device/phh/treble/board-base.mk
+		if ! grep -Eq 'DEXPREOPT' device/phh/treble/board-base.mk; then
 			echo "WITH_DEXPREOPT := false" >> device/phh/treble/board-base.mk
 			echo "DISABLE_DEXPREOPT := true" >> device/phh/treble/board-base.mk
 			echo "DONT_DEXPREOPT_PREBUILTS := true" >> device/phh/treble/board-base.mk
@@ -575,7 +610,7 @@ function build_variant() {
     fi
     [[ -n "$lunch_mk" ]] && lunch "$lunch_mk" || lunch "$1"
     make $extra_make_options ANDROID_COMPILE_WITH_JACK:=false  BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
-    [ -f "$OUT"/system.img ] && cp "$OUT"/system.img release/"$rom_fp"/system-"$2".img || echo -e "\n BUILD ERROR ! \n"
+    [ -f "$OUT"/system.img ] && cp "$OUT"/system.img release/"$rom_fp"/system-"$2".img || echo -e "\nBUILD ERROR ! \n"
 }
 
 function jack_env() {
@@ -585,18 +620,29 @@ function jack_env() {
     fi
 }
 
+################
+#              #
+# SCRIPT START #
+#              #
+################
+
+prepre_env
+
 parse_options "$@"
 get_rom_type "$@"
 get_variants "$@"
 
+
+if [[ -z "$mainrepo" || ${#variant_codes[*]} -eq 0 || "$1" == "--help" ]]; then
+	>&2 help
+	exit 1
+else
+	wc
+fi
+
 treble_var=$(echo "$variant_codes[${#variant_codes}]" | sed 's@-.*@@')
 
 gen_mk
-
-if [[ -z "$mainrepo" || ${#variant_codes[*]} -eq 0 ]]; then
-    >&2 help
-    exit 1
-fi    
 
 python=$(python -V 2>&1)
 if [[ "$python" == *"3."* ]]; then
