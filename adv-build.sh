@@ -144,7 +144,6 @@ EOF
 }
 
 function get_rom_type() {
-    while [[ $# -gt 0 ]]; do
         case "$1" in
             aosp81)
                 mainrepo="https://android.googlesource.com/platform/manifest.git"
@@ -224,7 +223,7 @@ function get_rom_type() {
 		gen_mk="dot"
 		gen_target="treble"
 		gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
-		gen_sepolicy=""
+		gen_sepolicy="include build/make/target/product/treble_common.mk" # use this instand
 		extra_make_options="WITHOUT_CHECK_API=true"
 		;;
 	    dot90)
@@ -235,7 +234,7 @@ function get_rom_type() {
 		gen_mk="dot"
 		gen_target="treble"
 		gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
-		gen_sepolicy=""
+		gen_sepolicy="include build/make/target/product/treble_common.mk"
 		extra_make_options="WITHOUT_CHECK_API=true"
 		;;
 	    aospa81)
@@ -406,11 +405,10 @@ function get_rom_type() {
                 treble_generate="havoc"
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
-	    default)
+	    *)
 		echo -e "\nUnknown ROM type: $1\n" ; help ; exit 1
+		;;
         esac
-        shift
-    done
 }
 
 function parse_options() {

@@ -9,6 +9,7 @@ if [ ! -f /vendor/build.prop ]; then
 fi
 
 VENDOR_FINGERPRINT="$(grep ro.vendor.build.fingerprint /vendor/build.prop | cut -d'=' -f 2)"
+SYSTEM_FINGERPRINT="$(cat /system/build.prop | grep "ro.build.fingerprint=" | dd bs=1 skip=21)"
 echo "Vendor fingerprint: ${VENDOR_FINGERPRINT}"
 
 VENDOR_BRAND="$(grep ro.vendor.product.brand /vendor/build.prop | cut -d'=' -f 2)"
@@ -40,7 +41,7 @@ modify_on_match() {
         -e "s/ro.product.device=.*/ro.product.device=${device}/" \
         -e "s/ro.lineage.device=.*/ro.lineage.device=${device}/" \
         -e "s/ro.aicp.device=.*/ro.aicp.device=${device}/" \
-        -e "s~ro.build.fingerprint=.*~ro.build.fingerprint=${VENDOR_FINGERPRINT}~" \
+        -e "s@ro.build.fingerprint=${SYSTEM_FINGERPRINT}@ro.build.fingerprint=${VENDOR_FINGERPRINT}@" \
         -e "s/ro.build.type=.*/ro.build.type=${TYPETXT}/" \
         -e "s/ro.build.tags=.*/ro.build.tags=${TAGSTXT}/" \
         -e "s/ro.build.selinux=.*/ro.build.selinux=${SELINUXTXT}/" \
@@ -57,7 +58,7 @@ modify_on_match() {
         -e "s/ro.product.device=.*/ro.product.device=${device}/" \
         -e "s/ro.lineage.device=.*/ro.lineage.device=${device}/" \
         -e "s/ro.aicp.device=.*/ro.aicp.device=${device}/" \
-        -e "s~ro.build.fingerprint=.*~ro.build.fingerprint=${VENDOR_FINGERPRINT}~" \
+        -e "s@ro.build.fingerprint=${SYSTEM_FINGERPRINT}@ro.build.fingerprint=${VENDOR_FINGERPRINT}@" \
         -e "s/ro.build.type=.*/ro.build.type=${TYPETXT}/" \
         -e "s/ro.build.tags=.*/ro.build.tags=${TAGSTXT}/" \
         -e "s/ro.build.selinux=.*/ro.build.selinux=${SELINUXTXT}/" \
