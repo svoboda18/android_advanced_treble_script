@@ -223,7 +223,7 @@ function get_rom_type() {
 		gen_mk="dot"
 		gen_target="treble"
 		gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
-		gen_sepolicy="include build/make/target/product/treble_common.mk" # use this instand
+		gen_sepolicy=""
 		extra_make_options="WITHOUT_CHECK_API=true"
 		;;
 	    dot90)
@@ -234,7 +234,7 @@ function get_rom_type() {
 		gen_mk="dot"
 		gen_target="treble"
 		gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
-		gen_sepolicy="include build/make/target/product/treble_common.mk"
+		gen_sepolicy=""
 		extra_make_options="WITHOUT_CHECK_API=true"
 		;;
 	    aospa81)
@@ -558,11 +558,11 @@ function patch_things() {
 			)
 		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
 	else
+		repodir="${PWD}"
 		cd device/phh/treble
 		bash generate.sh
-		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
 		cd ../../..
-	
+		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
 	fi
 }
 
@@ -596,7 +596,7 @@ function check_dex() {
 			echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
 		fi
 	else
-		wget -O board-base.mk.bak https://github.com/phhusson/device_phh_treble/raw/android-9.0/board-base.mk 2>/dev/null
+		wget -O board-base.mk.bak https://github.com/phhusson/device_phh_treble/raw/$localManifestBranch/board-base.mk 2>/dev/null
 		rm -f device/phh/treble/board-base.mk ; cp -r board-base.mk.bak device/phh/treble/board-base.mk
 	fi
 }
@@ -640,8 +640,6 @@ fi
 
 treble_var=$(echo "$variant_codes[${#variant_codes}]" | sed 's@-.*@@')
 
-gen_mk
-
 python=$(python -V 2>&1)
 if [[ "$python" == *"3."* ]]; then
 	if [ ! -d .venv ]; then
@@ -674,6 +672,7 @@ add_files
 
 read -p "- Do you want to start build now? (y/N) " choice3
 if [[ $choice3 == *"y"* ]];then
+	gen_mk
 	check_dex
 	jack_env
         . build/envsetup.sh

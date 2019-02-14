@@ -41,7 +41,7 @@ modify_on_match() {
         -e "s/ro.product.device=.*/ro.product.device=${device}/" \
         -e "s/ro.lineage.device=.*/ro.lineage.device=${device}/" \
         -e "s/ro.aicp.device=.*/ro.aicp.device=${device}/" \
-        -e "s@ro.build.fingerprint=${SYSTEM_FINGERPRINT}@ro.build.fingerprint=${VENDOR_FINGERPRINT}@" \
+        #-e "s@ro.build.fingerprint=${SYSTEM_FINGERPRINT}@ro.build.fingerprint=${VENDOR_FINGERPRINT}@" \
         -e "s/ro.build.type=.*/ro.build.type=${TYPETXT}/" \
         -e "s/ro.build.tags=.*/ro.build.tags=${TAGSTXT}/" \
         -e "s/ro.build.selinux=.*/ro.build.selinux=${SELINUXTXT}/" \
@@ -58,7 +58,7 @@ modify_on_match() {
         -e "s/ro.product.device=.*/ro.product.device=${device}/" \
         -e "s/ro.lineage.device=.*/ro.lineage.device=${device}/" \
         -e "s/ro.aicp.device=.*/ro.aicp.device=${device}/" \
-        -e "s@ro.build.fingerprint=${SYSTEM_FINGERPRINT}@ro.build.fingerprint=${VENDOR_FINGERPRINT}@" \
+        #-e "s@ro.build.fingerprint=${SYSTEM_FINGERPRINT}@ro.build.fingerprint=${VENDOR_FINGERPRINT}@" \
         -e "s/ro.build.type=.*/ro.build.type=${TYPETXT}/" \
         -e "s/ro.build.tags=.*/ro.build.tags=${TAGSTXT}/" \
         -e "s/ro.build.selinux=.*/ro.build.selinux=${SELINUXTXT}/" \
