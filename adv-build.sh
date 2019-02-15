@@ -223,7 +223,7 @@ function get_rom_type() {
 		gen_mk="dot"
 		gen_target="treble"
 		gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
-		gen_sepolicy=""
+		gen_sepolicy='$(call inherit-product, device/aosp/sepolicy/common/sepolicy.mk)'
 		extra_make_options="WITHOUT_CHECK_API=true"
 		;;
 	    dot90)
@@ -504,6 +504,7 @@ function init_local_manifest() {
 	clone_or_checkout device/phh/treble device_phh_treble
         clone_or_checkout vendor/vndk vendor_vndk master
         sed '/hardware_overlay/d' -i device/phh/treble/base.mk
+	sed '/core_64_bit/d' -i device/phh/treble/base.mk
 }
 
 function sync_repo() {
@@ -571,8 +572,8 @@ function gen_mk() {
 		ldir=${PWD}
 		cd device/phh/treble
 		cp $treble_var.mk $gen_mk.mk
-		sed '/PRODUCT_NAME/d' -i $gen_mk.mk
-		echo "PRODUCT_NAME := ${gen_mk}_$gen_target" >> $gen_mk.mk
+		sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_mk}_${gen_target}@" -i $gen_mk.mk
+		sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_mk}_${gen_target}@" -i $gen_mk.mk
 		lunch_mk=${gen_mk}_${gen_target}
 		[ ! -z "$gen_sepolicy" ] && {
 			(echo "$gen_sepolicy" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
@@ -601,14 +602,24 @@ function check_dex() {
 	fi
 }
 
+romname="$1"
 function build_variant() {
     read -p "* Do you want to clean before starting build? (y/N) " choicer
     if [[ $choicer == *"y"* ]];then
      make installclean
     fi
     [[ -n "$lunch_mk" ]] && lunch "$lunch_mk" || lunch "$1"
-    make $extra_make_options ANDROID_COMPILE_WITH_JACK:=false  BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
-    [ -f "$OUT"/system.img ] && cp "$OUT"/system.img release/"$rom_fp"/system-"$2".img || echo -e "\nBUILD ERROR ! \n"
+    make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
+    [ -f "$OUT"/system.img ] && (
+    echo -e "* ROM built sucessfully (release/$rom_fp)"
+    cp "$OUT"/system.img release/"$rom_fp"/$romname-system-"$2".img 
+    ) ; (
+    read -p "* Do you want to compress the built rom? (y/N) " zipch
+    if [[ $zipch == *"y"* ]]; then
+    cd r*/"$rom_fp" ; zip -r9 $romname-$treble_var-adv.zip $romname-*.img 2>/dev/null
+    fi
+    # upload, soon !
+    ) || echo -e "\nBUILD ERROR ! \n"
 }
 
 function jack_env() {
