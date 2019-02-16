@@ -112,8 +112,8 @@ ROM types:
   aicp90
   aokp81
   aokp90
-  aex90
   aex81
+  aex90
   slim81
   slim90
   havoc81
@@ -481,29 +481,22 @@ function init_main_repo() {
 	repo init --depth=1 -u "$mainrepo" -b "$mainbranch"
 }
 
-function clone_or_checkout() {
+function force_clone() {
 	local dir="$1"
 	local repo="$2"
         localManifestBranch_old="$localManifestBranch"
 	[ -z "$3" ] || localManifestBranch="$3"
 	
-	if [[ -d "$dir" ]];then
-		(
-			cd "$dir"
-			git reset --hard
-			git checkout origin/"$localManifestBranch"
-		)
-	else
-		git clone https://github.com/phhusson/"$repo" "$dir" -b "$localManifestBranch"
-	fi
+	rm -rf "$dir"
+	git clone https://github.com/phhusson/"$repo" "$dir" -b "$localManifestBranch"
 	
 	localManifestBranch="$localManifestBranch_old"
 }
 
 function init_local_manifest() {
-	clone_or_checkout device/phh/treble device_phh_treble
-        clone_or_checkout vendor/vndk vendor_vndk master
-        sed '/hardware_overlay/d' -i device/phh/treble/base.mk
+	force_clone device/phh/treble device_phh_treble
+        force_clone vendor/vndk vendor_vndk master
+	sed '/hardware_overlay/d' -i device/phh/treble/base.mk
 	sed '/core_64_bit/d' -i device/phh/treble/base.mk
 }
 
@@ -525,7 +518,7 @@ function add_files() {
 		cp -r $(dirname "$0")/rfiles/cmdsbp device/phh/treble/cmds/Android.bp
 
 		# fix kernel source missing (on pie)
-		sed 's;.*KERNEL_;//&;' -i vendor/$treble_generate/build/soong/Android.bp
+		sed 's;.*KERNEL_;//&;' -i vendor/$treble_generate/build/soong/Android.bp 2>/dev/null || true
 	fi
 	find $(dirname "$0")/rfiles/ -name '*.rc' -exec cp -prv '{}' 'device/phh/treble/' ';' &> /dev/null
 	find $(dirname "$0")/rfiles/ -name '*.sh' -exec cp -prv '{}' 'device/phh/treble/' ';' &> /dev/null
@@ -546,7 +539,13 @@ function fix_missings() {
        	cp -r apns-full-conf.xml device/sample/etc/
 	rm -rf apns*.xml
 }
- 
+
+function add_overlay() {
+	if [[ "$localManifestBranch" == *"9"* ]]; then
+		cp -r $(dirname "$0")/overlays/. device/phh/treble/overlay
+	fi
+}
+
 function patch_things() {
 	if [[ -n "$treble_generate" ]]; then
 		repodir="${PWD}"
@@ -668,8 +667,8 @@ if [[ "$choice" == *"y"* ]];then
 		clean_repo_folder
 	fi
 	init_main_repo
-	init_local_manifest
 	sync_repo
+	init_local_manifest
 fi
 
 read -p "- Do you want to patch? (y/N) " choice2
@@ -680,6 +679,7 @@ fi
 fix_missings
 add_mks
 add_files
+add_overlay
 
 read -p "- Do you want to start build now? (y/N) " choice3
 if [[ $choice3 == *"y"* ]];then

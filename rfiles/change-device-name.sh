@@ -1,6 +1,6 @@
 #!/system/bin/sh
 
-if grep -q phh.device.namechanged /system/build.prop;then
+if grep -q system.device.namechanged /system/build.prop;then
     exit 0
 fi
 
@@ -9,7 +9,7 @@ if [ ! -f /vendor/build.prop ]; then
 fi
 
 VENDOR_FINGERPRINT="$(grep ro.vendor.build.fingerprint /vendor/build.prop | cut -d'=' -f 2)"
-#SYSTEM_FINGERPRINT="$(cat /system/build.prop | grep "ro.build.fingerprint=" | dd bs=1 skip=21)"
+[ -z "$VENDOR_FINGERPRINT" ] && VENDOR_FINGERPRINT="$(grep ro.build.fingerprint /vendor/build.prop | cut -d'=' -f 2)"
 VENDOR_BRAND="$(grep ro.vendor.product.brand /vendor/build.prop | cut -d'=' -f 2)"
 VENDOR_MODEL="$(grep ro.vendor.product.model /vendor/build.prop | cut -d'=' -f 2)"
 VENDOR_NAME="$(grep ro.vendor.product.name /vendor/build.prop | cut -d'=' -f 2)"
@@ -66,8 +66,8 @@ if [ -n "${VENDOR_BRAND}" ] && [ -n "${VENDOR_MODEL}" ] && [ -n "${VENDOR_NAME}"
     modify_on_match "use_vendor_prop" "${VENDOR_BRAND}" "${VENDOR_MODEL}" "${VENDOR_NAME}" "${VENDOR_DEVICE}"
 fi
 
-if [ -z "$(grep phh.device.namechanged /system/build.prop)" ]; then
-    echo -e "\nphh.device.namechanged=true\n" >> /system/build.prop
+if [ -z "$(grep system.device.namechanged /system/build.prop)" ]; then
+    echo -e "\nsystem.device.namechanged=true\n" >> /system/build.prop
 fi
 
 mount -o remount,ro /system
