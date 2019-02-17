@@ -74,11 +74,16 @@ Usage Help:
 
 Syntax:
 
-  $myname [-j 2] <rom type> <variant>...
+  $myname [-j 2] <target chipset> <rom type> <variant> [<variant2> <variant3>..]
 
 Options:
 
   -j   number of parallel make workers (defaults to $jobs)
+
+Target chipset:
+
+  msm
+  mtk
 
 ROM types:
 
@@ -411,18 +416,6 @@ function get_rom_type() {
         esac
 }
 
-function parse_options() {
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            -j)
-                jobs="$2";
-                shift;
-                ;;
-        esac
-        shift
-    done
-}
-
 declare -A partition_layout_map
 partition_layout_map[aonly]=a
 partition_layout_map[ab]=b
@@ -458,7 +451,7 @@ function parse_variant() {
 declare -a variant_codes
 declare -a variant_names
 function get_variants() {
-    while [[ $# -gt 0 ]]; do
+	echo "$1"
         case "$1" in
             *-*-*-*-*)
                 variant_codes[${#variant_codes[*]}]=$(parse_variant "$1")
@@ -470,7 +463,6 @@ function get_variants() {
                 ;;
         esac
         shift
-    done
 }
 
 function init_release() {
@@ -487,7 +479,7 @@ function force_clone() {
         localManifestBranch_old="$localManifestBranch"
 	[ -z "$3" ] || localManifestBranch="$3"
 	
-	rm -rf "$dir"
+	[ -d "$dir" ] && rm -rf "$dir"
 	git clone https://github.com/phhusson/"$repo" "$dir" -b "$localManifestBranch"
 	
 	localManifestBranch="$localManifestBranch_old"
@@ -496,8 +488,13 @@ function force_clone() {
 function init_local_manifest() {
 	force_clone device/phh/treble device_phh_treble
         force_clone vendor/vndk vendor_vndk master
-	sed '/hardware_overlay/d' -i device/phh/treble/base.mk
-	sed '/core_64_bit/d' -i device/phh/treble/base.mk
+	if [[ $chip == "mtk" ]]; then
+		sed '/hardware_overlay/d' -i device/phh/treble/base.mk
+	elif [[ $chip == "msm" ]]; then
+		force_clone vendor/hardware_overlay vendor_hardware_overlay master
+	elif [[ $treble_var != *"arm64"* ]]; then
+		sed '/core_64_bit/d' -i device/phh/treble/base.mk
+	fi
 }
 
 function sync_repo() {
@@ -514,9 +511,10 @@ function add_mks() {
 
 function add_files() {
 	if [[ "$localManifestBranch" == *"9"* ]]; then
-		rm -r device/phh/treble/cmds/Android.bp
-		cp -r $(dirname "$0")/rfiles/cmdsbp device/phh/treble/cmds/Android.bp
-
+		if [[ $chip == "mtk" ]]; then
+			rm -r device/phh/treble/cmds/Android.bp
+			cp -r $(dirname "$0")/rfiles/cmdsbp device/phh/treble/cmds/Android.bp
+		fi
 		# fix kernel source missing (on pie)
 		sed 's;.*KERNEL_;//&;' -i vendor/$treble_generate/build/soong/Android.bp 2>/dev/null || true
 	fi
@@ -601,7 +599,6 @@ function check_dex() {
 	fi
 }
 
-romname="$1"
 function build_variant() {
     read -p "* Do you want to clean before starting build? (y/N) " choicer
     if [[ $choicer == *"y"* ]];then
@@ -611,11 +608,11 @@ function build_variant() {
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
     [ -f "$OUT"/system.img ] && (
     echo -e "* ROM built sucessfully (release/$rom_fp)"
-    cp "$OUT"/system.img release/"$rom_fp"/$romname-system-"$2".img 
+    cp "$OUT"/system.img release/"$rom_fp"/$rom_type-system-"$2".img 
     ) ; (
     read -p "* Do you want to compress the built rom? (y/N) " zipch
     if [[ $zipch == *"y"* ]]; then
-    cd r*/"$rom_fp" ; zip -r9 $romname-$treble_var-adv.zip $romname-*.img 2>/dev/null
+    cd r*/"$rom_fp" ; zip -r9 $rom_type-$treble_var-adv.zip $rom_type-*.img 2>/dev/null
     fi
     # upload, soon !
     ) || echo -e "\nBUILD ERROR ! \n"
@@ -636,9 +633,35 @@ function jack_env() {
 
 prepre_env
 
-parse_options "$@"
-get_rom_type "$@"
-get_variants "$@"
+if [[ $1 == "-j" ]]; then
+	re='^[0-9]+$'
+	if [[ $2 =~ $re ]] ; then
+		chip="$3"
+		jobs="$2"
+		rom_type="$4"
+		target="$5"
+		targets="$(($#-4))"
+		start='4'
+	else
+		echo -e "\nNot a jobs number: $2\n" ; help ; exit 1
+	fi
+else
+	chip="$1"
+	rom_type="$2"
+	target="$3"
+	targets="$(($#-2))"
+	start='2'
+fi
+
+get_rom_type "$rom_type"
+
+num=0
+while [[ "$num" != "$targets" ]]; do
+	num="$(($num+1))"
+	rom="$(($num+$start))"
+	get_variants "${!rom}"
+
+done
 
 
 if [[ -z "$mainrepo" || ${#variant_codes[*]} -eq 0 || "$1" == "--help" ]]; then
@@ -647,8 +670,6 @@ if [[ -z "$mainrepo" || ${#variant_codes[*]} -eq 0 || "$1" == "--help" ]]; then
 else
 	wc
 fi
-
-treble_var=$(echo "$variant_codes[${#variant_codes}]" | sed 's@-.*@@')
 
 python=$(python -V 2>&1)
 if [[ "$python" == *"3."* ]]; then
@@ -683,11 +704,13 @@ add_overlay
 
 read -p "- Do you want to start build now? (y/N) " choice3
 if [[ $choice3 == *"y"* ]];then
-	gen_mk
 	check_dex
 	jack_env
         . build/envsetup.sh
 	for (( idx=0; idx < ${#variant_codes[*]}; idx++ )); do
+		treble_var=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
+		gen_mk
 		build_variant "${variant_codes[$idx]}" "${variant_names[$idx]}"
+	read
 	done
 fi
