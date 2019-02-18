@@ -27,22 +27,27 @@ set -e
 
 # Get full dirs locations, else patches wont be found
 repo="$(readlink -f -- $1)"
-patches="$(readlink -f -- $0 |sed -e 's/apply-patches.sh//g')patches"
+
+# Decide to use msm or mtk patches?
+case "$2" in
+	msm) patches="$(readlink -f -- $0 |sed -e 's/apply-patches.sh//g')patches_msm" ;;
+	mtk) patches="$(readlink -f -- $0 |sed -e 's/apply-patches.sh//g')patches_mtk" ;;
+esac
 
 # Decide to use pie or oreo patches?
-case "$2" in
-	android-8.1) oe="$patches/oreo" ; patches="$oe" ;;
-	android-9.0) pe="$patches/pie" ; patches="$pe" ;;
+case "$3" in
+	android-8.1) patches="$patches/oreo" ;;
+	android-9.0) patches="$patches/pie" ;;
 esac
 
 # Now start patching
 for project in $(cd $patches; echo *);do
-	# Get every folder dir, then navigate to it
-	p="$(tr _ / <<<$project |sed -e 's;platform/;;g')"
-	[ "$p" == build ] && p=build/make
+	# Get every patch target folder dir, then navigate to it
+	patch_target="$(tr _ / <<<$project |sed -e 's;platform/;;g')"
+	[ "$patch_target" == build ] && patch_target=build/make
 	cd $repo
-	repo sync -l --force-sync $p
-	pushd $p
+	repo sync -l --force-sync $patch_target
+	pushd $patch_target
 	git clean -fdx; git reset --hard
 
 	# Apply patch one by one
@@ -56,7 +61,7 @@ for project in $(cd $patches; echo *);do
 		if patch -f -p1 --dry-run < $patch > /dev/null;then
 			patch -f -p1 < $patch
 		else
-			echo "Failed applying $patch"
+			echo Failed applying $(echo $patch |sed -e "s@$patches/@@")
 		fi
 
 	done

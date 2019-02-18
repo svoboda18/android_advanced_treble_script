@@ -451,7 +451,6 @@ function parse_variant() {
 declare -a variant_codes
 declare -a variant_names
 function get_variants() {
-	echo "$1"
         case "$1" in
             *-*-*-*-*)
                 variant_codes[${#variant_codes[*]}]=$(parse_variant "$1")
@@ -488,12 +487,10 @@ function force_clone() {
 function init_local_manifest() {
 	force_clone device/phh/treble device_phh_treble
         force_clone vendor/vndk vendor_vndk master
-	if [[ $chip == "mtk" ]]; then
+	if [[ $target_chip = "mtk" ]]; then
 		sed '/hardware_overlay/d' -i device/phh/treble/base.mk
-	elif [[ $chip == "msm" ]]; then
+	elif [[ $target_chip = "msm" ]]; then
 		force_clone vendor/hardware_overlay vendor_hardware_overlay master
-	elif [[ $treble_var != *"arm64"* ]]; then
-		sed '/core_64_bit/d' -i device/phh/treble/base.mk
 	fi
 }
 
@@ -511,7 +508,7 @@ function add_mks() {
 
 function add_files() {
 	if [[ "$localManifestBranch" == *"9"* ]]; then
-		if [[ $chip == "mtk" ]]; then
+		if [[ $target_chip = "mtk" ]]; then
 			rm -r device/phh/treble/cmds/Android.bp
 			cp -r $(dirname "$0")/rfiles/cmdsbp device/phh/treble/cmds/Android.bp
 		fi
@@ -554,13 +551,13 @@ function patch_things() {
 				bash generate.sh "$treble_generate"
 				cd ../../..
 			)
-		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
+		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
 	else
 		repodir="${PWD}"
 		cd device/phh/treble
 		bash generate.sh
 		cd ../../..
-		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
+		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
 	fi
 }
 
@@ -568,10 +565,10 @@ function gen_mk() {
 	if [[ -n "$gen_mk" ]]; then
 		ldir=${PWD}
 		cd device/phh/treble
-		cp $treble_var.mk $gen_mk.mk
+		cp $target_name.mk $gen_mk.mk
 		sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_mk}_${gen_target}@" -i $gen_mk.mk
 		sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_mk}_${gen_target}@" -i $gen_mk.mk
-		lunch_mk=${gen_mk}_${gen_target}
+		gen_lunch=${gen_mk}_${gen_target}
 		[ ! -z "$gen_sepolicy" ] && {
 			(echo "$gen_sepolicy" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
 			rm -f $gen_mk.mk ; mv $gen_mk.mk2 $gen_mk.mk
@@ -604,7 +601,7 @@ function build_variant() {
     if [[ $choicer == *"y"* ]];then
      make installclean
     fi
-    [[ -n "$lunch_mk" ]] && lunch "$lunch_mk" || lunch "$1"
+    [[ -n "$gen_lunch" ]] && ( lunch "$gen_lunch" ) || lunch "$1"
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
     [ -f "$OUT"/system.img ] && (
     echo -e "* ROM built sucessfully (release/$rom_fp)"
@@ -612,7 +609,7 @@ function build_variant() {
     ) ; (
     read -p "* Do you want to compress the built rom? (y/N) " zipch
     if [[ $zipch == *"y"* ]]; then
-    cd r*/"$rom_fp" ; zip -r9 $rom_type-$treble_var-adv.zip $rom_type-*.img 2>/dev/null
+    cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-adv.zip $rom_type-*.img 2>/dev/null
     fi
     # upload, soon !
     ) || echo -e "\nBUILD ERROR ! \n"
@@ -636,31 +633,28 @@ prepre_env
 if [[ $1 == "-j" ]]; then
 	re='^[0-9]+$'
 	if [[ $2 =~ $re ]] ; then
-		chip="$3"
+		target_chip="$3"
 		jobs="$2"
 		rom_type="$4"
-		target="$5"
 		targets="$(($#-4))"
 		start='4'
 	else
 		echo -e "\nNot a jobs number: $2\n" ; help ; exit 1
 	fi
 else
-	chip="$1"
+	target_chip="$1"
 	rom_type="$2"
-	target="$3"
 	targets="$(($#-2))"
 	start='2'
 fi
 
 get_rom_type "$rom_type"
 
-num=0
-while [[ "$num" != "$targets" ]]; do
-	num="$(($num+1))"
-	rom="$(($num+$start))"
-	get_variants "${!rom}"
-
+count=0
+while [[ "$count" != "$targets" ]]; do
+	count="$(($count+1))"
+	variant="$(($count+$start))"
+	get_variants "${!variant}"
 done
 
 
@@ -708,9 +702,13 @@ if [[ $choice3 == *"y"* ]];then
 	jack_env
         . build/envsetup.sh
 	for (( idx=0; idx < ${#variant_codes[*]}; idx++ )); do
-		treble_var=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
+		target_name=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
 		gen_mk
+		if [[ $target_name != *"arm64"* ]]; then
+			sed '/core_64_bit/d' -i device/phh/treble/base.mk
+		elif ! grep 'core_64_bit' device/phh/treble/base.mk; then
+			echo '$(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)' >> device/phh/treble/base.mk
+		fi
 		build_variant "${variant_codes[$idx]}" "${variant_names[$idx]}"
-	read
 	done
 fi

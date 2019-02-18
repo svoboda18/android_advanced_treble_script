@@ -1,0 +1,26 @@
+From 8cdf614d084f763107d197852a7f6ba3db802b13 Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Sun, 9 Dec 2018 16:31:44 +0100
+Subject: [PATCH 26/26] Use Samsung fingerprint percent thingy on all Samsung
+ devices
+
+---
+ .../core/java/com/android/server/fingerprint/FingerprintService.java    | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/services/core/java/com/android/server/fingerprint/FingerprintService.java b/services/core/java/com/android/server/fingerprint/FingerprintService.java
+index 6f09433..8c2990b 100644
+--- a/services/core/java/com/android/server/fingerprint/FingerprintService.java
++++ b/services/core/java/com/android/server/fingerprint/FingerprintService.java
+@@ -1048,7 +1048,7 @@ public class FingerprintService extends SystemService implements IHwBinder.Death
+                 public void run() {
+                     int remaining2 = remaining;
+                     String fp = android.os.SystemProperties.get("ro.vendor.build.fingerprint");
+-                    if(fp != null && (fp.contains("starlte") || fp.contains("star2lte") || fp.contains("starqlte") || fp.contains("star2qlte")))
++                    if(fp != null && (fp.startsWith("samsung/")))
+                         remaining2 = 100 - remaining2;
+                     handleEnrollResult(deviceId, fingerId, groupId, remaining2);
+                 }
+-- 
+2.7.4
+

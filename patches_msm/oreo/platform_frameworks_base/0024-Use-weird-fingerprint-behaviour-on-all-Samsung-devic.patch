@@ -1,0 +1,26 @@
+From bf619557cb44aef5367b1c250187496b280dea0c Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Mon, 7 Jan 2019 22:07:00 +0100
+Subject: [PATCH 24/24] Use weird fingerprint behaviour on all Samsung devices
+
+---
+ .../core/java/com/android/server/fingerprint/FingerprintService.java   | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/services/core/java/com/android/server/fingerprint/FingerprintService.java b/services/core/java/com/android/server/fingerprint/FingerprintService.java
+index d4d9d5c..84e7757 100644
+--- a/services/core/java/com/android/server/fingerprint/FingerprintService.java
++++ b/services/core/java/com/android/server/fingerprint/FingerprintService.java
+@@ -957,8 +957,7 @@ public class FingerprintService extends SystemService implements IHwBinder.Death
+                 public void run() {
+                     int remaining2 = remaining;
+                     String fp = android.os.SystemProperties.get("ro.vendor.build.fingerprint");
+-                    if(fp.matches(".*(crown|star)[q2]*lte.*") ||
+-                            fp.matches(".*(SC-0[23]K|SCV3[89]).*"))
++                    if(fp.startsWith("samsung/"))
+                         remaining2 = 100 - remaining2;
+                     handleEnrollResult(deviceId, fingerId, groupId, remaining2);
+                 }
+-- 
+2.7.4
+
