@@ -601,7 +601,7 @@ function build_variant() {
     if [[ $choicer == *"y"* ]];then
      make installclean
     fi
-    [[ -n "$gen_lunch" ]] && ( lunch "$gen_lunch" ) || lunch "$1"
+    [[ -n "$gen_lunch" ]] && lunch "$gen_lunch" || lunch "$1"
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
     [ -f "$OUT"/system.img ] && (
     echo -e "* ROM built sucessfully (release/$rom_fp)"
