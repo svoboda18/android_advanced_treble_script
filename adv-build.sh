@@ -495,7 +495,7 @@ function init_local_manifest() {
 }
 
 function sync_repo() {
-        repo sync -c -j"$jobs" --no-clone-bundle --no-tags
+        repo sync -c -j"$jobs" --force-broken --no-clone-bundle --no-tags
 }
 
 function clean_repo_folder() {
