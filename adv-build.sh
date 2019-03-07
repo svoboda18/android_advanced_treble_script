@@ -487,6 +487,7 @@ function force_clone() {
 function init_local_manifest() {
 	force_clone device/phh/treble device_phh_treble
         force_clone vendor/vndk vendor_vndk master
+	force_clone vendor/interfaces vendor_interfaces master
 	if [[ $target_chip = "mtk" ]]; then
 		sed '/hardware_overlay/d' -i device/phh/treble/base.mk
 	elif [[ $target_chip = "msm" ]]; then
@@ -510,7 +511,7 @@ function add_files() {
 	if [[ "$localManifestBranch" == *"9"* ]]; then
 		if [[ $target_chip = "mtk" ]]; then
 			rm -r device/phh/treble/cmds/Android.bp
-			cp -r $(dirname "$0")/rfiles/cmdsbp device/phh/treble/cmds/Android.bp
+			wget -P device/phh/treble/cmds/ https://github.com/phhusson/device_phh_treble/raw/android-8.1/cmds/Android.bp
 		fi
 		# fix kernel source missing (on pie)
 		sed 's;.*KERNEL_;//&;' -i vendor/$treble_generate/build/soong/Android.bp 2>/dev/null || true
@@ -550,6 +551,9 @@ function patch_things() {
 			        git clean -fdx
 				bash generate.sh "$treble_generate"
 				cd ../../..
+				cd vendor/interfaces
+				bash generate.sh
+				cd ../..
 			)
 		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
 	else
