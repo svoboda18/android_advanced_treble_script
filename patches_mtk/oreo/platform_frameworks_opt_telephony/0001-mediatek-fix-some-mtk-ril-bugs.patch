@@ -1,51 +1,42 @@
-From 5ed59a4ddbdd8dc8969129f1e1e8fcc4165d523f Mon Sep 17 00:00:00 2001
-From: Artem Borisov <dedsa2002@gmail.com>
-Date: Sat, 10 Nov 2018 17:19:17 +0000
-Subject: [PATCH 3/5] Telephony: Don not call onUssdRelease for Huawei RIL
+From b47091748618dfcb84e3d7db0a6cb8cd57218dc6 Mon Sep 17 00:00:00 2001
+From: svoboda18 <ruspam18@gmail.com>
+Date: Fri, 8 Mar 2019 17:43:54 +0000
+Subject: [PATCH] mediatek: fix some mtk ril bugs
 
-Huawei RIL doesn't seem to work properly with USSD_MODE_NW_RELEASE,
-always releasing USSD when it should be finished instead.
-Let's explicitly call onUssdFinished in this case.
-
-Change-Id: I69faed1c51d4582834879975d6ab13daf7f48ad4
----
- src/java/com/android/internal/telephony/GsmCdmaPhone.java | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/src/java/com/android/internal/telephony/GsmCdmaPhone.java b/src/java/com/android/internal/telephony/GsmCdmaPhone.java
-index 2a94fc5..a29ad3f 100644
+index adfb2f2..cc115fd 100644
 --- a/src/java/com/android/internal/telephony/GsmCdmaPhone.java
 +++ b/src/java/com/android/internal/telephony/GsmCdmaPhone.java
-@@ -2152,7 +2152,11 @@ public class GsmCdmaPhone extends Phone {
+@@ -2057,7 +2057,11 @@ public class GsmCdmaPhone extends Phone {
              // Complete pending USSD
  
              if (isUssdRelease) {
 -                found.onUssdRelease();
-+                (SystemProperties.getBoolean("persist.sys.radio.ussd.fix", false)) {
++                if (SystemProperties.getBoolean("persist.sys.radio.ussd.fix", false)) {
 +                    found.onUssdFinished(ussdMessage, isUssdRequest);
-+                else {
++                } else {
 +                    found.onUssdRelease();
 +                }
              } else if (isUssdError) {
                  found.onUssdFinishedError();
              } else {
 diff --git a/src/java/com/android/internal/telephony/dataconnection/DcTracker.java b/src/java/com/android/internal/telephony/dataconnection/DcTracker.java
-index fc9dd86..7985d24 100644
+index 452b120..26a58d4 100644
 --- a/src/java/com/android/internal/telephony/dataconnection/DcTracker.java
 +++ b/src/java/com/android/internal/telephony/dataconnection/DcTracker.java
-@@ -3314,11 +3314,13 @@ public class DcTracker extends Handler {
+@@ -3344,11 +3344,12 @@ public class DcTracker extends Handler {
      }
  
-     private void setDataProfilesAsNeeded() {
+     protected void setDataProfilesAsNeeded() {
 +        boolean forceCognitive = SystemProperties.getBoolean("persist.sys.phh.radio.force_cognitive", false);
-+
          if (DBG) log("setDataProfilesAsNeeded");
          if (mAllApnSettings != null && !mAllApnSettings.isEmpty()) {
              ArrayList<DataProfile> dps = new ArrayList<DataProfile>();
              for (ApnSetting apn : mAllApnSettings) {
 -                if (apn.modemCognitive) {
 +                if (apn.modemCognitive || forceCognitive) {
-                     DataProfile dp = createDataProfile(apn);
+                     DataProfile dp = new DataProfile(apn);
                      if (!dps.contains(dp)) {
                          dps.add(dp);
 -- 

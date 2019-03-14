@@ -91,6 +91,8 @@ ROM types:
   aosp90
   aospa81
   aospa90
+  aosip81
+  aosip90
   carbon81
   carbon90
   e-1.0
@@ -164,6 +166,20 @@ function get_rom_type() {
                 treble_generate=""
                 extra_make_options=""
                 ;;
+	    aosip81)
+		mainrepo="https://github.com/AOSiP/platform_manifest.git"
+		mainbranch="oreo-mr1"
+		localManifestBranch="android-8.1"
+		treble_generate="aosip"
+		extra_make_options=""
+		;;
+	    aosip90)
+		mainrepo="https://github.com/AOSiP/platform_manifest.git"
+		mainbranch="pie"
+		localManifestBranch="android-9.0"
+		treble_generate="aosip"
+		extra_make_options=""
+            	;;
 	    carbon81)
                 mainrepo="https://github.com/CarbonROM/android.git"
                 mainbranch="cr-6.1"
@@ -272,14 +288,14 @@ function get_rom_type() {
 		;;
 	    bliss81)
 		mainrepo="https://github.com/BlissRoms/platform_manifest.git"
-		mainbranch="o-8.1"
+		mainbranch="o8.1"
 		localManifestBranch="android-8.1"
 		treble_generate="bliss"
 		extra_make_options="WITHOUT_CHECK_API=true"
 		;;
 	    bliss90)
 		mainrepo="https://github.com/BlissRoms/platform_manifest.git"
-		mainbranch="p-9.0"
+		mainbranch="p9.0"
 		localManifestBranch="android-9.0"
 		treble_generate="bliss"
 		extra_make_options="WITHOUT_CHECK_API=true"
@@ -487,7 +503,11 @@ function force_clone() {
 function init_local_manifest() {
 	force_clone device/phh/treble device_phh_treble
         force_clone vendor/vndk vendor_vndk master
-	force_clone vendor/interfaces vendor_interfaces master
+	if [[ "$localManifestBranch" == *"9"* ]]; then
+	force_clone vendor/interfaces vendor_interfaces pie
+	else
+        force_clone vendor/interfaces vendor_interfaces master
+	fi
 	if [[ $target_chip = "mtk" ]]; then
 		sed '/hardware_overlay/d' -i device/phh/treble/base.mk
 	elif [[ $target_chip = "msm" ]]; then
@@ -561,6 +581,9 @@ function patch_things() {
 		cd device/phh/treble
 		bash generate.sh
 		cd ../../..
+                cd vendor/interfaces
+                bash generate.sh
+                cd ../..
 		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
 	fi
 }
@@ -669,7 +692,7 @@ else
 	wc
 fi
 
-python=$(python -V 2>&1)
+python=$(python -V 2>&1 || true)
 if [[ "$python" == *"3."* ]]; then
 	if [ ! -d .venv ]; then
 		virtualenv2 .venv
