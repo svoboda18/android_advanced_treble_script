@@ -1,0 +1,30 @@
+From e7e11645e77ec5d044c5c491662309015b2023dd Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Tue, 2 Apr 2019 23:00:32 +0200
+Subject: [PATCH 5/6] Some devices require to call onUssdFinished for
+ isUssdRelease. Add a prop for that
+
+---
+ src/java/com/android/internal/telephony/GsmCdmaPhone.java | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/java/com/android/internal/telephony/GsmCdmaPhone.java b/src/java/com/android/internal/telephony/GsmCdmaPhone.java
+index 505334167..65fc8203b 100644
+--- a/src/java/com/android/internal/telephony/GsmCdmaPhone.java
++++ b/src/java/com/android/internal/telephony/GsmCdmaPhone.java
+@@ -2043,7 +2043,11 @@ public class GsmCdmaPhone extends Phone {
+             // Complete pending USSD
+ 
+             if (isUssdRelease) {
+-                found.onUssdRelease();
++                if (SystemProperties.getBoolean("persist.sys.radio.ussd.fix", false)) {
++                    found.onUssdFinished(ussdMessage, isUssdRequest);
++                } else {
++                    found.onUssdRelease();
++                }
+             } else if (isUssdError) {
+                 found.onUssdFinishedError();
+             } else {
+-- 
+2.17.1
+

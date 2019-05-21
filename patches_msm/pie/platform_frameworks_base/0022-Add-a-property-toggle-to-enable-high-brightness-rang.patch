@@ -1,15 +1,15 @@
-From 4f0cea404573890ddbc23a45e4825d03380dc87a Mon Sep 17 00:00:00 2001
+From aac8a05b691bff6cb9081ea76d8e5c6f1e4fe70d Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 27 Aug 2018 00:47:13 +0200
-Subject: [PATCH 22/26] Add a property toggle to enable high brightness range
+Subject: [PATCH 22/31] Add a property toggle to enable high brightness range
  on samsung device
 
 ---
- services/core/java/com/android/server/lights/LightsService.java | 6 +++++-
+ .../core/java/com/android/server/lights/LightsService.java  | 6 +++++-
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/services/core/java/com/android/server/lights/LightsService.java b/services/core/java/com/android/server/lights/LightsService.java
-index 2ad3877..89008ea 100644
+index 2ad38774b9d..89008ea3134 100644
 --- a/services/core/java/com/android/server/lights/LightsService.java
 +++ b/services/core/java/com/android/server/lights/LightsService.java
 @@ -56,7 +56,11 @@ public class LightsService extends SystemService {
@@ -26,5 +26,5 @@ index 2ad3877..89008ea 100644
                      }
  
 -- 
-2.7.4
+2.17.1
 

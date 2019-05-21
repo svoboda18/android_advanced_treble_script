@@ -1,4 +1,4 @@
-From 431268a7fcf94e0ca41d777271e4fc9c0e2d537d Mon Sep 17 00:00:00 2001
+From 4fafe697c13f7c414dfbe9573e4ce73068580ab3 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 27 Mar 2018 23:26:49 +0200
 Subject: [PATCH 1/2] Revert "Remove root folder bt_firmware in GSI"
@@ -13,7 +13,7 @@ Essential 8.1 firmware requires this
  3 files changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/target/board/generic_arm64_ab/BoardConfig.mk b/target/board/generic_arm64_ab/BoardConfig.mk
-index fc6b582..8200196 100644
+index fc6b58284..820019676 100644
 --- a/target/board/generic_arm64_ab/BoardConfig.mk
 +++ b/target/board/generic_arm64_ab/BoardConfig.mk
 @@ -33,7 +33,7 @@ TARGET_NO_RECOVERY := true
@@ -26,7 +26,7 @@ index fc6b582..8200196 100644
  
  # Set this to create /cache mount point for non-A/B devices that mounts /cache.
 diff --git a/target/board/generic_arm64_ab/sepolicy/file.te b/target/board/generic_arm64_ab/sepolicy/file.te
-index 7adfdfa..4645533 100644
+index 7adfdfa4e..46455339a 100644
 --- a/target/board/generic_arm64_ab/sepolicy/file.te
 +++ b/target/board/generic_arm64_ab/sepolicy/file.te
 @@ -1,5 +1,6 @@
@@ -37,7 +37,7 @@ index 7adfdfa..4645533 100644
  
  # Default type for anything under /firmware.
 diff --git a/target/board/generic_arm64_ab/sepolicy/file_contexts b/target/board/generic_arm64_ab/sepolicy/file_contexts
-index 0a80559..92a4ff8 100644
+index 0a80559e1..92a4ff872 100644
 --- a/target/board/generic_arm64_ab/sepolicy/file_contexts
 +++ b/target/board/generic_arm64_ab/sepolicy/file_contexts
 @@ -2,6 +2,7 @@
@@ -49,5 +49,5 @@ index 0a80559..92a4ff8 100644
  /dsp                    u:object_r:rootfs:s0
  
 -- 
-2.7.4
+2.17.1
 

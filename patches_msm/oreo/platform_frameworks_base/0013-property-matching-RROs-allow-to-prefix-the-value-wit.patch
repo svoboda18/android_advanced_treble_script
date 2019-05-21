@@ -1,7 +1,7 @@
-From 3806d046eda8ad4fc8fa86127e8e84e9c5cf0db7 Mon Sep 17 00:00:00 2001
+From b275e4f5f679ad5c0e1218b6c6a98bf8a26591af Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 12 Jun 2018 22:55:32 +0200
-Subject: [PATCH 13/24] property-matching RROs: allow to prefix the value with
+Subject: [PATCH 13/25] property-matching RROs: allow to prefix the value with
  + to do glob match instead of exact match
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 13/24] property-matching RROs: allow to prefix the value with
  1 file changed, 5 insertions(+)
 
 diff --git a/cmds/idmap/scan.cpp b/cmds/idmap/scan.cpp
-index d69dd79..2be6d23 100644
+index d69dd79555a..2be6d23ac78 100644
 --- a/cmds/idmap/scan.cpp
 +++ b/cmds/idmap/scan.cpp
 @@ -1,5 +1,6 @@
@@ -31,5 +31,5 @@ index d69dd79..2be6d23 100644
      }
  
 -- 
-2.7.4
+2.17.1
 

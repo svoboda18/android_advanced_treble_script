@@ -1,4 +1,4 @@
-From 1f8a2f0c71e5feabd613c42d57794e15efa3a6ed Mon Sep 17 00:00:00 2001
+From 0db3adc78adb5f2a1bec10dc6824a26b6dada9b6 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 20 Aug 2018 22:38:08 +0200
 Subject: [PATCH 5/5] Also create vendor_ce (same reason as vendor_de)
@@ -21,5 +21,5 @@ index 090532f..6b60796 100644
              if (!prepare_dir(system_ce_path, 0770, AID_SYSTEM, AID_SYSTEM)) return false;
              if (!prepare_dir(misc_ce_path, 01771, AID_SYSTEM, AID_MISC)) return false;
 -- 
-2.7.4
+2.17.1
 

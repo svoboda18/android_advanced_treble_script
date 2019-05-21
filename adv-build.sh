@@ -351,7 +351,7 @@ function get_rom_type() {
                 ;;
 	    mokee90)
 		mainrepo="https://github.com/MoKee/android.git"
-		mainbranch="9.0"
+		mainbranch="mkp"
 		localManifestBranch="android-9.0"
 		treble_generate="mokee"
 		extra_make_options="WITHOUT_CHECK_API=true"
@@ -731,16 +731,6 @@ if [[ $choice3 == *"y"* ]];then
 	for (( idx=0; idx < ${#variant_codes[*]}; idx++ )); do
 		target_name=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
 		gen_mk
-		if [[ $target_name != *"64"* ]]; then
-			sed '/core_64_bit/d' -i device/phh/treble/base.mk
-		elif ! grep 'core_64_bit' device/phh/treble/base.mk; then
-			echo "\$(call inherit-product, \$(SRC_TARGET_DIR)/product/core_64_bit.mk)" >>device/phh/treble/base.mk
-		fi
-		if [[ $target_name == *"arm_"* ]]; then
-			sed "s@BOARD_SYSTEMIMAGE_PARTITION_SIZE.*@BOARD_SYSTEMIMAGE_PARTITION_SIZE := 1056964608@" -i device/phh/treble/phhgsi_arm_a/BoardConfig.mk
-		elif grep -qE '1056964608' device/phh/treble/phhgsi_arm_a/BoardConfig.mk; then
-			cd device/phh/treble ; git checkout phhgsi_arm_a/BoardConfig.mk ; cd ../../..
-		fi
 		build_variant "${variant_codes[$idx]}" "${variant_names[$idx]}"
 	done
 fi

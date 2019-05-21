@@ -1,7 +1,7 @@
-From 2b9792a94ff1bdf63f7cdcf8ee6fde95d87861d0 Mon Sep 17 00:00:00 2001
+From 49e0279b8336c231788a44d97dc598224f87ead8 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 19 Aug 2018 10:57:21 +0200
-Subject: [PATCH 16/26] Move SysuiDarkThemeOverlay to /system
+Subject: [PATCH 16/31] Move SysuiDarkThemeOverlay to /system
 
 Change-Id: I31b3edc5d1abcc1163a13e63c909fee9d27ff432
 ---
@@ -9,7 +9,7 @@ Change-Id: I31b3edc5d1abcc1163a13e63c909fee9d27ff432
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/packages/overlays/SysuiDarkThemeOverlay/Android.mk b/packages/overlays/SysuiDarkThemeOverlay/Android.mk
-index 7b277bc..89cfcf8 100644
+index 7b277bcf035..89cfcf819c2 100644
 --- a/packages/overlays/SysuiDarkThemeOverlay/Android.mk
 +++ b/packages/overlays/SysuiDarkThemeOverlay/Android.mk
 @@ -11,4 +11,5 @@ LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
@@ -20,5 +20,5 @@ index 7b277bc..89cfcf8 100644
 +LOCAL_IS_RUNTIME_RESOURCE_OVERLAY := true
 +include $(BUILD_PACKAGE)
 -- 
-2.7.4
+2.17.1
 

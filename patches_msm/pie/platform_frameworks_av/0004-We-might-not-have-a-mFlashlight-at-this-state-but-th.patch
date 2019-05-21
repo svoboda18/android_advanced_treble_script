@@ -1,7 +1,7 @@
-From 40a38effa34d80eb2cd9f3d91b52419e6fa3f5be Mon Sep 17 00:00:00 2001
+From 9b0b84e101f0785ec40246dd43be9ac0ab239dad Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 19 Aug 2018 23:05:26 +0200
-Subject: [PATCH 4/6] We might not have a mFlashlight at this state, but that's
+Subject: [PATCH 4/8] We might not have a mFlashlight at this state, but that's
  ok
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 4/6] We might not have a mFlashlight at this state, but that's
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/services/camera/libcameraservice/CameraService.cpp b/services/camera/libcameraservice/CameraService.cpp
-index d62a71a..5bc9087 100644
+index d62a71ab9..5bc9087b4 100644
 --- a/services/camera/libcameraservice/CameraService.cpp
 +++ b/services/camera/libcameraservice/CameraService.cpp
 @@ -243,7 +243,7 @@ void CameraService::addStates(const String8 id) {
@@ -22,5 +22,5 @@ index d62a71a..5bc9087 100644
          mTorchStatusMap.add(id, TorchModeStatus::AVAILABLE_OFF);
      }
 -- 
-2.7.4
+2.17.1
 

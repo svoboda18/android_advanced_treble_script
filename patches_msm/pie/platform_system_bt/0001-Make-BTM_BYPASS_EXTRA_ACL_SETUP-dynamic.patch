@@ -1,7 +1,7 @@
-From b52dca29f95832d6fa5340870470654d9bde8d73 Mon Sep 17 00:00:00 2001
+From 7cd888e8393f7e03bab257e3506e58d307dfef8a Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 20 Feb 2018 23:04:50 +0100
-Subject: [PATCH] Make BTM_BYPASS_EXTRA_ACL_SETUP dynamic
+Subject: [PATCH 1/2] Make BTM_BYPASS_EXTRA_ACL_SETUP dynamic
 
 Change-Id: Icb0868566b29b053ed7e83c9fd32e225af3f2e46
 ---
@@ -12,7 +12,7 @@ Change-Id: Icb0868566b29b053ed7e83c9fd32e225af3f2e46
  4 files changed, 25 insertions(+), 19 deletions(-)
 
 diff --git a/hci/include/bt_hci_bdroid.h b/hci/include/bt_hci_bdroid.h
-index cf2c113..e2844db 100644
+index cf2c1136f..e2844db82 100644
 --- a/hci/include/bt_hci_bdroid.h
 +++ b/hci/include/bt_hci_bdroid.h
 @@ -32,6 +32,9 @@
@@ -26,7 +26,7 @@ index cf2c113..e2844db 100644
  /******************************************************************************
   *  Constants & Macros
 diff --git a/internal_include/bt_target.h b/internal_include/bt_target.h
-index cf09b15..396114f 100644
+index cf09b15da..396114faf 100644
 --- a/internal_include/bt_target.h
 +++ b/internal_include/bt_target.h
 @@ -32,6 +32,9 @@
@@ -40,7 +40,7 @@ index cf09b15..396114f 100644
  #include "bt_types.h" /* This must be defined AFTER buildcfg.h */
  
 diff --git a/stack/btm/btm_acl.cc b/stack/btm/btm_acl.cc
-index ee2530a..389a998 100644
+index ee2530ac2..389a998c6 100644
 --- a/stack/btm/btm_acl.cc
 +++ b/stack/btm/btm_acl.cc
 @@ -1184,17 +1184,17 @@ void btm_read_remote_ext_features_failed(uint8_t status, uint16_t handle) {
@@ -72,7 +72,7 @@ index ee2530a..389a998 100644
      BTM_TRACE_ERROR("%s: Already link is up ", __func__);
      return;
 diff --git a/stack/btm/btm_sec.cc b/stack/btm/btm_sec.cc
-index b080901..4cc1e39 100644
+index b0809010f..4cc1e39ab 100644
 --- a/stack/btm/btm_sec.cc
 +++ b/stack/btm/btm_sec.cc
 @@ -4356,15 +4356,15 @@ void btm_sec_connected(const RawAddress& bda, uint16_t handle, uint8_t status,
@@ -101,5 +101,5 @@ index b080901..4cc1e39 100644
    btm_acl_created(bda, p_dev_rec->dev_class, p_dev_rec->sec_bd_name, handle,
                    HCI_ROLE_SLAVE, BT_TRANSPORT_BR_EDR);
 -- 
-2.7.4
+2.17.1
 

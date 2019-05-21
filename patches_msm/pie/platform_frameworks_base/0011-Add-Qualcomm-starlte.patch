@@ -1,14 +1,14 @@
-From ece0a70c832df0877298c38bd8627c915a5542dd Mon Sep 17 00:00:00 2001
+From 9e13de340e0d3a2a755f382ea3410ac488461236 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 25 Jun 2018 22:43:32 +0200
-Subject: [PATCH 11/26] Add Qualcomm starlte
+Subject: [PATCH 11/31] Add Qualcomm starlte
 
 ---
- services/core/java/com/android/server/lights/LightsService.java | 4 +++-
+ .../core/java/com/android/server/lights/LightsService.java    | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/services/core/java/com/android/server/lights/LightsService.java b/services/core/java/com/android/server/lights/LightsService.java
-index 4dc44de..2886f29 100644
+index 4dc44de37cd..2886f2900d9 100644
 --- a/services/core/java/com/android/server/lights/LightsService.java
 +++ b/services/core/java/com/android/server/lights/LightsService.java
 @@ -55,7 +55,9 @@ public class LightsService extends SystemService {
@@ -23,5 +23,5 @@ index 4dc44de..2886f29 100644
                          return;
                      }
 -- 
-2.7.4
+2.17.1
 

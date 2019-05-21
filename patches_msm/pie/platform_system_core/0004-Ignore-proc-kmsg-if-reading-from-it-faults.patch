@@ -1,7 +1,7 @@
-From 7662d0071d1f7960c7eed7c9ab6222187bd92a6c Mon Sep 17 00:00:00 2001
+From 3d7de7286249e30966f0a853e4076c2076c70362 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 2 Jan 2019 17:17:20 +0100
-Subject: [PATCH 4/4] Ignore /proc/kmsg if reading from it faults
+Subject: [PATCH 4/7] Ignore /proc/kmsg if reading from it faults
 
 On some devices, (The only known one is Y6 2018), reading from
 /proc/kmsg fails, with a status EFAULT
@@ -15,7 +15,7 @@ Change-Id: I4b902b7ec36107c722e2f5cc5dbb7964734bb71d
  1 file changed, 3 insertions(+)
 
 diff --git a/logd/LogKlog.cpp b/logd/LogKlog.cpp
-index ab980ac..fefa498 100755
+index ab980ac5d..fefa49867 100755
 --- a/logd/LogKlog.cpp
 +++ b/logd/LogKlog.cpp
 @@ -239,6 +239,9 @@ bool LogKlog::onDataAvailable(SocketClient* cli) {
@@ -29,5 +29,5 @@ index ab980ac..fefa498 100755
          }
          len += retval;
 -- 
-2.7.4
+2.17.1
 

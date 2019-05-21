@@ -1,14 +1,14 @@
-From 6841fe6b1fb6caf848753dee70f585a3a5c1b9fb Mon Sep 17 00:00:00 2001
+From 491b9ace3db2e132949d7579ef5819f0f789a971 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 29 Aug 2018 11:05:54 +0200
-Subject: [PATCH 23/26] Add a property to override pre-o max aspect ratio
+Subject: [PATCH 23/31] Add a property to override pre-o max aspect ratio
 
 ---
- services/core/java/com/android/server/am/ActivityRecord.java | 9 ++++++++-
+ .../core/java/com/android/server/am/ActivityRecord.java  | 9 ++++++++-
  1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/services/core/java/com/android/server/am/ActivityRecord.java b/services/core/java/com/android/server/am/ActivityRecord.java
-index 97ae377..5718c5e 100644
+index 97ae3772ca3..5718c5ee8d0 100644
 --- a/services/core/java/com/android/server/am/ActivityRecord.java
 +++ b/services/core/java/com/android/server/am/ActivityRecord.java
 @@ -161,6 +161,7 @@ import android.os.PersistableBundle;
@@ -42,5 +42,5 @@ index 97ae377..5718c5e 100644
          // configuration's appBounds based on the result of this method. If we used our own
          // configuration, it would be influenced by past invocations.
 -- 
-2.7.4
+2.17.1
 

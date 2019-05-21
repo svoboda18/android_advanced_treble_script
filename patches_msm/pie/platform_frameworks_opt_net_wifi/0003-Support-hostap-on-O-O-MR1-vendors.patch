@@ -1,4 +1,4 @@
-From 1c29feee7facb88f9702e88eee1cedfe6eeeb35b Mon Sep 17 00:00:00 2001
+From a1f7086dc8ee1d379006c42eebbc88504c4cbeee Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <pierre-hugues.husson@softathome.com>
 Date: Tue, 18 Sep 2018 17:05:07 +0200
 Subject: [PATCH 3/3] Support hostap on O/O-MR1 vendors
@@ -11,12 +11,12 @@ quite a good guess
 Now, it is a requirement to be supported, so most(all?) HALs don't
 support it. force stop/start for every reconfiguration
 ---
- .../com/android/server/wifi/HalDeviceManager.java  | 22 ++++++++++++++++++++--
- .../java/com/android/server/wifi/WifiNative.java   | 15 ++++++++++++++-
+ .../android/server/wifi/HalDeviceManager.java | 22 +++++++++++++++++--
+ .../com/android/server/wifi/WifiNative.java   | 15 ++++++++++++-
  2 files changed, 34 insertions(+), 3 deletions(-)
 
 diff --git a/service/java/com/android/server/wifi/HalDeviceManager.java b/service/java/com/android/server/wifi/HalDeviceManager.java
-index 3c61217..68fc9cc 100644
+index 3c61217d7..68fc9ccfa 100644
 --- a/service/java/com/android/server/wifi/HalDeviceManager.java
 +++ b/service/java/com/android/server/wifi/HalDeviceManager.java
 @@ -63,8 +63,8 @@ import java.util.Set;
@@ -63,7 +63,7 @@ index 3c61217..68fc9cc 100644
      }
  
 diff --git a/service/java/com/android/server/wifi/WifiNative.java b/service/java/com/android/server/wifi/WifiNative.java
-index eb5e11a..af8ccc8 100644
+index eb5e11aca..af8ccc8d9 100644
 --- a/service/java/com/android/server/wifi/WifiNative.java
 +++ b/service/java/com/android/server/wifi/WifiNative.java
 @@ -692,8 +692,21 @@ public class WifiNative {
@@ -90,5 +90,5 @@ index eb5e11a..af8ccc8 100644
                  Log.i(TAG, "Vendor Hal not supported, ignoring createApIface.");
                  return handleIfaceCreationWhenVendorHalNotSupported(iface);
 -- 
-2.7.4
+2.17.1
 

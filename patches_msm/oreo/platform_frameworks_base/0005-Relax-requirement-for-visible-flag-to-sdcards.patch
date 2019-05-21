@@ -1,7 +1,7 @@
-From a6218db83a13cecfa0ab23b63d3a5bd501de229e Mon Sep 17 00:00:00 2001
+From 9eb7c042d9044ae9c6aaa433c16ccc185bc8a035 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 28 Nov 2017 18:28:04 +0100
-Subject: [PATCH 05/24] Relax requirement for visible flag to sdcards
+Subject: [PATCH 05/25] Relax requirement for visible flag to sdcards
 
 The vast majority of sdcard readers are stable enough to be declared by
 the API. (I see no counter-example)
@@ -9,11 +9,11 @@ FBE broke adoptable storage with SDCard, hence this need.
 
 Change-Id: Ia616671c03562d1eadaff5531a5c708a62d7ad3a
 ---
- services/core/java/com/android/server/StorageManagerService.java | 3 ++-
+ .../core/java/com/android/server/StorageManagerService.java    | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/services/core/java/com/android/server/StorageManagerService.java b/services/core/java/com/android/server/StorageManagerService.java
-index 1ca0112..4014cab 100644
+index 1ca0112cb4f..4014cab4043 100644
 --- a/services/core/java/com/android/server/StorageManagerService.java
 +++ b/services/core/java/com/android/server/StorageManagerService.java
 @@ -1316,7 +1316,8 @@ class StorageManagerService extends IStorageManager.Stub
@@ -27,5 +27,5 @@ index 1ca0112..4014cab 100644
              }
  
 -- 
-2.7.4
+2.17.1
 

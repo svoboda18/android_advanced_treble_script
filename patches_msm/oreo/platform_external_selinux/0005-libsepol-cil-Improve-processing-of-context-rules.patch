@@ -20,11 +20,11 @@ Based on an initial patch by Pierre-Hugues Husson (phh@phh.me)
 
 Signed-off-by: James Carter <jwcart2@tycho.nsa.gov>
 ---
- libsepol/cil/src/cil_post.c | 303 ++++++++++++++++++++++++++++++++++++++++++--
+ libsepol/cil/src/cil_post.c | 303 ++++++++++++++++++++++++++++++++++--
  1 file changed, 292 insertions(+), 11 deletions(-)
 
 diff --git a/libsepol/cil/src/cil_post.c b/libsepol/cil/src/cil_post.c
-index a30de0e..3799350 100644
+index a30de0e1..37993506 100644
 --- a/libsepol/cil/src/cil_post.c
 +++ b/libsepol/cil/src/cil_post.c
 @@ -53,6 +53,83 @@
@@ -373,5 +373,5 @@ index a30de0e..3799350 100644
  exit:
  	return rc;
 -- 
-2.7.4
+2.17.1
 

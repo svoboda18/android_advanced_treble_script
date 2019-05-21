@@ -22,5 +22,5 @@ index 974c7fc..69d1d27 100644
              Version avbMetaVersion;
              if (!getFlag("FRAMEWORK_VBMETA_VERSION", &avbMetaVersion)) {
 -- 
-2.7.4
+2.17.1
 

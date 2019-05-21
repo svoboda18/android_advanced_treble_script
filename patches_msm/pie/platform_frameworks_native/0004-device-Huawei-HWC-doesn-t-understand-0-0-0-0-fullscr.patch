@@ -1,4 +1,4 @@
-From ebd42df0080727345440ead40fd63979fe5942a8 Mon Sep 17 00:00:00 2001
+From 399d13fc183a7fbd3118425c7cfecbb9a72ba9ce Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Fri, 5 Jan 2018 00:26:38 +0100
 Subject: [PATCH 4/4] [device] ::Huawei:: HWC doesn't understand 0,0,0,0 ==
@@ -18,7 +18,7 @@ This fixes several UI glitches, most notably GBoard.
  3 files changed, 18 insertions(+), 1 deletion(-)
 
 diff --git a/services/surfaceflinger/BufferLayer.cpp b/services/surfaceflinger/BufferLayer.cpp
-index 7ac1432..2646af0 100644
+index 7ac143219..2646af0c9 100644
 --- a/services/surfaceflinger/BufferLayer.cpp
 +++ b/services/surfaceflinger/BufferLayer.cpp
 @@ -631,7 +631,13 @@ void BufferLayer::setPerFrameData(const sp<const DisplayDevice>& displayDevice)
@@ -37,7 +37,7 @@ index 7ac1432..2646af0 100644
          ALOGE("[%s] Failed to set surface damage: %s (%d)", mName.string(),
                to_string(error).c_str(), static_cast<int32_t>(error));
 diff --git a/services/surfaceflinger/SurfaceFlinger.cpp b/services/surfaceflinger/SurfaceFlinger.cpp
-index 8606255..2c6dc7f 100644
+index 860625525..2c6dc7f21 100644
 --- a/services/surfaceflinger/SurfaceFlinger.cpp
 +++ b/services/surfaceflinger/SurfaceFlinger.cpp
 @@ -384,6 +384,14 @@ SurfaceFlinger::SurfaceFlinger() : SurfaceFlinger(SkipInitialization) {
@@ -56,7 +56,7 @@ index 8606255..2c6dc7f 100644
  
  void SurfaceFlinger::onFirstRef()
 diff --git a/services/surfaceflinger/SurfaceFlinger.h b/services/surfaceflinger/SurfaceFlinger.h
-index 0148ab6..367ea55 100644
+index 0148ab675..367ea555a 100644
 --- a/services/surfaceflinger/SurfaceFlinger.h
 +++ b/services/surfaceflinger/SurfaceFlinger.h
 @@ -852,6 +852,9 @@ private:
@@ -70,5 +70,5 @@ index 0148ab6..367ea55 100644
      mutable std::unique_ptr<MessageQueue> mEventQueue{std::make_unique<impl::MessageQueue>()};
      FrameTracker mAnimFrameTracker;
 -- 
-2.7.4
+2.17.1
 

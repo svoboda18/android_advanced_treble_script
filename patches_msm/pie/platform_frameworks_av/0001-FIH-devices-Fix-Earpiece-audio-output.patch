@@ -1,7 +1,7 @@
-From 6853dd2cc71ba69f3e582dc83ba00d25f7298385 Mon Sep 17 00:00:00 2001
+From 59177bd162dbb442c5561ac128c83b111ea1112d Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 24 Apr 2018 00:14:28 +0200
-Subject: [PATCH 1/6] FIH devices: Fix "Earpiece" audio output
+Subject: [PATCH 1/8] FIH devices: Fix "Earpiece" audio output
 
 On some FIH devices (confirmed on Razer, and probably on Aquos SS2),
 Earpiece is not listed in attachedDevices, and devicePort's profile
@@ -12,11 +12,11 @@ and fix both channelMasks and attachedDevices
 
 Change-Id: I4a88ba6d34d0fcd346eeea2ca903772f0271040a
 ---
- .../common/managerdefinitions/src/Serializer.cpp   | 25 +++++++++++++++++++---
+ .../managerdefinitions/src/Serializer.cpp     | 25 ++++++++++++++++---
  1 file changed, 22 insertions(+), 3 deletions(-)
 
 diff --git a/services/audiopolicy/common/managerdefinitions/src/Serializer.cpp b/services/audiopolicy/common/managerdefinitions/src/Serializer.cpp
-index a253113..380e2f8 100644
+index a2531131d..380e2f82b 100644
 --- a/services/audiopolicy/common/managerdefinitions/src/Serializer.cpp
 +++ b/services/audiopolicy/common/managerdefinitions/src/Serializer.cpp
 @@ -191,16 +191,25 @@ const char AudioProfileTraits::Attributes::name[] = "name";
@@ -74,5 +74,5 @@ index a253113..380e2f8 100644
  }
  
 -- 
-2.7.4
+2.17.1
 

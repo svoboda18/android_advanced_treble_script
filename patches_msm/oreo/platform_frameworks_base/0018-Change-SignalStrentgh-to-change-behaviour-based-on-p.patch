@@ -1,15 +1,15 @@
-From c2df67a49a25a253036e1849e43c1a11e72af6b0 Mon Sep 17 00:00:00 2001
+From 00ad16afbebf256aa80d43294dae533f9ac724c5 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 6 Aug 2018 20:01:44 +0200
-Subject: [PATCH 18/24] Change SignalStrentgh to change behaviour based on
+Subject: [PATCH 18/25] Change SignalStrentgh to change behaviour based on
  property
 
 ---
- .../java/android/telephony/SignalStrength.java     | 33 ++++++++++++++++------
+ .../android/telephony/SignalStrength.java     | 33 ++++++++++++++-----
  1 file changed, 24 insertions(+), 9 deletions(-)
 
 diff --git a/telephony/java/android/telephony/SignalStrength.java b/telephony/java/android/telephony/SignalStrength.java
-index 9e02399..0ea4130 100644
+index 9e02399338f..0ea4130158c 100644
 --- a/telephony/java/android/telephony/SignalStrength.java
 +++ b/telephony/java/android/telephony/SignalStrength.java
 @@ -827,6 +827,7 @@ public class SignalStrength implements Parcelable {
@@ -67,5 +67,5 @@ index 9e02399..0ea4130 100644
  
      }
 -- 
-2.7.4
+2.17.1
 

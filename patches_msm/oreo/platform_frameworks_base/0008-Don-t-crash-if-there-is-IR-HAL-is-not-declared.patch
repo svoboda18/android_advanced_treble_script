@@ -1,14 +1,14 @@
-From 3a624088c15d93a2fc06e6e0be808c111c021bb8 Mon Sep 17 00:00:00 2001
+From 8dc6b64388e02cdf5feb4ae954c63c5c32faadf7 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Thu, 17 May 2018 20:28:35 +0200
-Subject: [PATCH 08/24] Don't crash if there is IR HAL is not declared
+Subject: [PATCH 08/25] Don't crash if there is IR HAL is not declared
 
 ---
  services/core/java/com/android/server/ConsumerIrService.java | 2 --
  1 file changed, 2 deletions(-)
 
 diff --git a/services/core/java/com/android/server/ConsumerIrService.java b/services/core/java/com/android/server/ConsumerIrService.java
-index 2ed6c77..c574a03 100644
+index 2ed6c77baa0..c574a03c9a3 100644
 --- a/services/core/java/com/android/server/ConsumerIrService.java
 +++ b/services/core/java/com/android/server/ConsumerIrService.java
 @@ -50,8 +50,6 @@ public class ConsumerIrService extends IConsumerIrService.Stub {
@@ -21,5 +21,5 @@ index 2ed6c77..c574a03 100644
      }
  
 -- 
-2.7.4
+2.17.1
 

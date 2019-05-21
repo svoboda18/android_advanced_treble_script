@@ -1,4 +1,4 @@
-From f3713c51a3854bbc0ec43ab6421d12bf688791f5 Mon Sep 17 00:00:00 2001
+From 98915840a5635fcd2f319012861cf5da1df8f54a Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 5 Mar 2018 22:27:50 +0100
 Subject: [PATCH 2/2] Set ro.build.fingerprint in system/etc/prop.default
@@ -9,7 +9,7 @@ Change-Id: Idceb2a160f70b36aa6806ae60cbfb325367f3b75
  1 file changed, 1 insertion(+)
 
 diff --git a/core/Makefile b/core/Makefile
-index 0a2f6e3..059aa98 100644
+index 0a2f6e39d..059aa98c2 100644
 --- a/core/Makefile
 +++ b/core/Makefile
 @@ -176,6 +176,7 @@ $(INSTALLED_DEFAULT_PROP_TARGET): $(intermediate_system_build_prop)
@@ -21,5 +21,5 @@ index 0a2f6e3..059aa98 100644
  ifdef property_overrides_split_enabled
  	$(hide) mkdir -p $(TARGET_ROOT_OUT)
 -- 
-2.7.4
+2.17.1
 

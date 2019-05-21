@@ -1,14 +1,14 @@
-From 5d49c9cb2a933a6ea2e21a06cd2ec5ecd53e7e1b Mon Sep 17 00:00:00 2001
+From 28861679c6a9a4e89ea82e6b27c6092b5c49ce5c Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <pierre-hugues.husson@softathome.com>
 Date: Thu, 7 Jun 2018 13:36:51 +0200
-Subject: [PATCH 06/26] S9 brightness override only for screen
+Subject: [PATCH 06/31] S9 brightness override only for screen
 
 ---
- .../core/java/com/android/server/lights/LightsService.java   | 12 +++++++-----
+ .../com/android/server/lights/LightsService.java     | 12 +++++++-----
  1 file changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/services/core/java/com/android/server/lights/LightsService.java b/services/core/java/com/android/server/lights/LightsService.java
-index 762b0ae..eb25943 100644
+index 762b0ae4037..eb25943fa6b 100644
 --- a/services/core/java/com/android/server/lights/LightsService.java
 +++ b/services/core/java/com/android/server/lights/LightsService.java
 @@ -53,11 +53,13 @@ public class LightsService extends SystemService {
@@ -31,5 +31,5 @@ index 762b0ae..eb25943 100644
                  int color = brightness & 0x000000ff;
                  color = 0xff000000 | (color << 16) | (color << 8) | color;
 -- 
-2.7.4
+2.17.1
 

@@ -1,7 +1,7 @@
 From ce9c87da9980217462e24d0e048658cb1d01a4e4 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 6 Aug 2018 19:59:43 +0200
-Subject: [PATCH 3/3] Set OpenKirin signal level meter to be activated on
+Subject: [PATCH 3/6] Set OpenKirin signal level meter to be activated on
  property
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 3/3] Set OpenKirin signal level meter to be activated on
  1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/src/java/com/android/internal/telephony/RIL.java b/src/java/com/android/internal/telephony/RIL.java
-index 00e69f9..9902bf9 100644
+index 00e69f908..9902bf94d 100644
 --- a/src/java/com/android/internal/telephony/RIL.java
 +++ b/src/java/com/android/internal/telephony/RIL.java
 @@ -5188,11 +5188,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
@@ -27,5 +27,5 @@ index 00e69f9..9902bf9 100644
                  signalStrength.gw.bitErrorRate,
                  signalStrength.cdma.dbm,
 -- 
-2.7.4
+2.17.1
 

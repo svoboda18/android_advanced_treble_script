@@ -1,14 +1,14 @@
-From 56aa792db15871de2d934c7a43ba2241bcd9db30 Mon Sep 17 00:00:00 2001
+From 2549d19075a8f35c48bf80c9312fecef411e34a6 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <pierre-hugues.husson@softathome.com>
 Date: Tue, 4 Sep 2018 10:55:06 +0200
-Subject: [PATCH 23/24] Include Samsung fingerprint fix on Note 9 as well
+Subject: [PATCH 23/25] Include Samsung fingerprint fix on Note 9 as well
 
 ---
- .../core/java/com/android/server/fingerprint/FingerprintService.java   | 3 ++-
+ .../com/android/server/fingerprint/FingerprintService.java     | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/services/core/java/com/android/server/fingerprint/FingerprintService.java b/services/core/java/com/android/server/fingerprint/FingerprintService.java
-index 3cfa367..d4d9d5c 100644
+index 3cfa3678c4b..d4d9d5ceb7e 100644
 --- a/services/core/java/com/android/server/fingerprint/FingerprintService.java
 +++ b/services/core/java/com/android/server/fingerprint/FingerprintService.java
 @@ -957,7 +957,8 @@ public class FingerprintService extends SystemService implements IHwBinder.Death
@@ -22,5 +22,5 @@ index 3cfa367..d4d9d5c 100644
                      handleEnrollResult(deviceId, fingerId, groupId, remaining2);
                  }
 -- 
-2.7.4
+2.17.1
 

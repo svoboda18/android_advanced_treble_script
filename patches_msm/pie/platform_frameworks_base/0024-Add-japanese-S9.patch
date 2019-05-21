@@ -1,14 +1,14 @@
-From 4d532fe770a5e3094aa17d185051aa83ad7b4410 Mon Sep 17 00:00:00 2001
+From 8d199eba0c2e55725d0677ff4c949e48737af7e9 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 28 Aug 2018 20:39:26 +0200
-Subject: [PATCH 24/26] Add japanese S9
+Subject: [PATCH 24/31] Add japanese S9
 
 ---
- services/core/java/com/android/server/lights/LightsService.java | 3 ++-
+ .../core/java/com/android/server/lights/LightsService.java     | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/services/core/java/com/android/server/lights/LightsService.java b/services/core/java/com/android/server/lights/LightsService.java
-index 89008ea..47c1d92 100644
+index 89008ea3134..47c1d9297fe 100644
 --- a/services/core/java/com/android/server/lights/LightsService.java
 +++ b/services/core/java/com/android/server/lights/LightsService.java
 @@ -55,7 +55,8 @@ public class LightsService extends SystemService {
@@ -22,5 +22,5 @@ index 89008ea..47c1d92 100644
                          if(SystemProperties.getBoolean("persist.sys.samsung.full_brightness", false)) {
                              newBrightness = (int) (brightness * 40960.0 / 255.0);
 -- 
-2.7.4
+2.17.1
 

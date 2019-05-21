@@ -1,7 +1,7 @@
-From 5b2bf5ee36de93f0e211a27b33da7e2020e856cc Mon Sep 17 00:00:00 2001
+From dc13b3822c1c5e96245b28b24ca817bf77b6b35e Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 14 Aug 2018 19:33:23 +0200
-Subject: [PATCH 3/4] First drop_privs (which may fail) and only run thread
+Subject: [PATCH 3/7] First drop_privs (which may fail) and only run thread
  that might be scheduled before us
 
 Change-Id: I118fb2d4beedbeecf5d3a8d255929d3be480b923
@@ -10,7 +10,7 @@ Change-Id: I118fb2d4beedbeecf5d3a8d255929d3be480b923
  1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/logd/main.cpp b/logd/main.cpp
-index 4af0d21..bb64fb4 100644
+index 4af0d21f1..bb64fb46f 100644
 --- a/logd/main.cpp
 +++ b/logd/main.cpp
 @@ -450,6 +450,12 @@ int main(int argc, char* argv[]) {
@@ -40,5 +40,5 @@ index 4af0d21..bb64fb4 100644
      // socket connection, and as a reader lock on a range of log
      // entries.
 -- 
-2.7.4
+2.17.1
 

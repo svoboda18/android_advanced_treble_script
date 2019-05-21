@@ -1,4 +1,4 @@
-From 8e74a7801e1a80486f5bbf0a95e49ef14ad5e162 Mon Sep 17 00:00:00 2001
+From d15e07cd279c89d85705c41f93eb5ab01aac1e34 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 10 Dec 2017 00:26:21 +0100
 Subject: [PATCH] Revert "logd: add "+passcred" for logdw socket"
@@ -12,7 +12,7 @@ Android 8.0 init doesn't understand this new syntax
  2 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/logd/LogListener.cpp b/logd/LogListener.cpp
-index d2df68e..e4d2dea 100644
+index d2df68eef..e4d2dea92 100644
 --- a/logd/LogListener.cpp
 +++ b/logd/LogListener.cpp
 @@ -145,14 +145,14 @@ int LogListener::getLogSocket() {
@@ -36,7 +36,7 @@ index d2df68e..e4d2dea 100644
      return sock;
  }
 diff --git a/logd/logd.rc b/logd/logd.rc
-index 8804246..7494d8f 100644
+index 88042466b..7494d8fb3 100644
 --- a/logd/logd.rc
 +++ b/logd/logd.rc
 @@ -1,7 +1,7 @@
@@ -49,5 +49,5 @@ index 8804246..7494d8f 100644
      file /dev/kmsg w
      user logd
 -- 
-2.7.4
+2.17.1
 

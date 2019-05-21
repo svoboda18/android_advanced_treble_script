@@ -1,7 +1,7 @@
-From 04d0ebdf89f7315759f2d8f6a0a648b1c4687ce1 Mon Sep 17 00:00:00 2001
+From 802180be4f26937bc2faf7b88c0d62fd13bd97f0 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 1 May 2018 17:47:36 +0200
-Subject: [PATCH 07/24] Also scan /system/overlay
+Subject: [PATCH 07/25] Also scan /system/overlay
 
 ---
  core/jni/android_util_AssetManager.cpp | 6 +++++-
@@ -9,7 +9,7 @@ Subject: [PATCH 07/24] Also scan /system/overlay
  2 files changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/core/jni/android_util_AssetManager.cpp b/core/jni/android_util_AssetManager.cpp
-index 30d8abe..9ec1a75 100644
+index 30d8abe16d7..9ec1a75ad6c 100644
 --- a/core/jni/android_util_AssetManager.cpp
 +++ b/core/jni/android_util_AssetManager.cpp
 @@ -164,7 +164,7 @@ static void verifySystemIdmaps()
@@ -33,7 +33,7 @@ index 30d8abe..9ec1a75 100644
                  if (argc > 5) {
                      execv(AssetManager::IDMAP_BIN, (char* const*)argv);
 diff --git a/core/jni/fd_utils.cpp b/core/jni/fd_utils.cpp
-index 496b140..6ba3798 100644
+index 496b140ea86..6ba3798e394 100644
 --- a/core/jni/fd_utils.cpp
 +++ b/core/jni/fd_utils.cpp
 @@ -90,7 +90,8 @@ bool FileDescriptorWhitelist::IsAllowed(const std::string& path) const {
@@ -47,5 +47,5 @@ index 496b140..6ba3798 100644
        && path.find("/../") == std::string::npos) {
      return true;
 -- 
-2.7.4
+2.17.1
 

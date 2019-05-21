@@ -1,17 +1,17 @@
-From fb2d1810b9f10b383cb98dc2708b33d899fa182e Mon Sep 17 00:00:00 2001
+From 875a58806b9cd6f815f78872baefb8565725209d Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Thu, 16 Aug 2018 22:12:46 +0200
-Subject: [PATCH 1/5] Add route to gateway on null netmask
+Subject: [PATCH 1/7] Add route to gateway on null netmask
 
 Galaxy S9 returns empty prefix
 
 Change-Id: I8133da8e8f5203666684100009ba658528a02e94
 ---
- .../telephony/dataconnection/DataConnection.java        | 17 +++++++++++++++++
+ .../dataconnection/DataConnection.java          | 17 +++++++++++++++++
  1 file changed, 17 insertions(+)
 
 diff --git a/src/java/com/android/internal/telephony/dataconnection/DataConnection.java b/src/java/com/android/internal/telephony/dataconnection/DataConnection.java
-index dafab12..643f488 100644
+index dafab121c..643f488c8 100644
 --- a/src/java/com/android/internal/telephony/dataconnection/DataConnection.java
 +++ b/src/java/com/android/internal/telephony/dataconnection/DataConnection.java
 @@ -24,6 +24,7 @@ import android.content.Context;
@@ -46,5 +46,5 @@ index dafab12..643f488 100644
                      // this indicates a point-to-point interface.
                      linkProperties.addRoute(new RouteInfo(gateway));
 -- 
-2.7.4
+2.17.1
 

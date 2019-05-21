@@ -1,4 +1,4 @@
-From c6e4f65fe6c43a39142dd5088b399f422f754074 Mon Sep 17 00:00:00 2001
+From edeb825839b1c1e315b0194fa91a6c8c47f3331f Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 14 Aug 2018 21:01:35 +0200
 Subject: [PATCH 1/4] AOSP 8.0/8.1 didn't use presentOrValidate, so it's
@@ -9,7 +9,7 @@ Subject: [PATCH 1/4] AOSP 8.0/8.1 didn't use presentOrValidate, so it's
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/services/surfaceflinger/DisplayHardware/HWComposer.cpp b/services/surfaceflinger/DisplayHardware/HWComposer.cpp
-index f5f7a82..3c269ea 100644
+index f5f7a821f..3c269ea1f 100644
 --- a/services/surfaceflinger/DisplayHardware/HWComposer.cpp
 +++ b/services/surfaceflinger/DisplayHardware/HWComposer.cpp
 @@ -435,7 +435,7 @@ status_t HWComposer::prepare(DisplayDevice& displayDevice) {
@@ -22,5 +22,5 @@ index f5f7a82..3c269ea 100644
          uint32_t state = UINT32_MAX;
          error = hwcDisplay->presentOrValidate(&numTypes, &numRequests, &outPresentFence , &state);
 -- 
-2.7.4
+2.17.1
 

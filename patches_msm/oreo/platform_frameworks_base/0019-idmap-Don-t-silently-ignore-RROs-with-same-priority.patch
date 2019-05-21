@@ -1,7 +1,7 @@
-From e133a9ea418846ec167b258e4f9113c155d24366 Mon Sep 17 00:00:00 2001
+From 58d750251022c2141216cbdc7c48a77ea22fc8da Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 19 Aug 2018 10:51:06 +0200
-Subject: [PATCH 19/24] idmap: Don't silently ignore RROs with same priority
+Subject: [PATCH 19/25] idmap: Don't silently ignore RROs with same priority
 
 Change-Id: I64a6899f1b30e0cd9e9a872b7ca83d831f038cbe
 ---
@@ -9,7 +9,7 @@ Change-Id: I64a6899f1b30e0cd9e9a872b7ca83d831f038cbe
  1 file changed, 2 insertions(+)
 
 diff --git a/cmds/idmap/scan.cpp b/cmds/idmap/scan.cpp
-index 0acff23..d1dde52 100644
+index 0acff23d031..d1dde52732f 100644
 --- a/cmds/idmap/scan.cpp
 +++ b/cmds/idmap/scan.cpp
 @@ -29,6 +29,8 @@ namespace {
@@ -22,5 +22,5 @@ index 0acff23..d1dde52 100644
          }
  
 -- 
-2.7.4
+2.17.1
 
