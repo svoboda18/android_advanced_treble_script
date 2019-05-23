@@ -130,6 +130,7 @@ Variants are dash-joined combinations of (in order):
 - Processor type
   * "arm" for ARM 32 bit
   * "arm64" for ARM 64 bit
+  * "a64" for ARM 32 bit system with 64 bit binder
 - A or A/B partition layout ("aonly" or "ab")
 - GApps selection
   * "vanilla" to not include GApps
@@ -255,7 +256,7 @@ function get_rom_type() {
 		gen_mk="dot"
 		gen_target="treble"
 		gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
-		gen_sepolicy=""
+		gen_sepolicy=''
 		extra_make_options="WITHOUT_CHECK_API=true"
 		;;
 	    aospa81)
@@ -508,11 +509,7 @@ function init_local_manifest() {
 	else
         force_clone vendor/interfaces vendor_interfaces master
 	fi
-	if [[ $target_chip = "mtk" ]]; then
-		sed '/hardware_overlay/d' -i device/phh/treble/base.mk
-	elif [[ $target_chip = "msm" ]]; then
-		force_clone vendor/hardware_overlay vendor_hardware_overlay master
-	fi
+	force_clone vendor/hardware_overlay vendor_hardware_overlay master
 }
 
 function sync_repo() {
@@ -531,7 +528,7 @@ function add_files() {
 	if [[ "$localManifestBranch" == *"9"* ]]; then
 		if [[ $target_chip = "mtk" ]]; then
 			rm -r device/phh/treble/cmds/Android.bp
-			wget -P device/phh/treble/cmds/ https://github.com/phhusson/device_phh_treble/raw/android-8.1/cmds/Android.bp
+			wget -P device/phh/treble/cmds/ https://github.com/phhusson/device_phh_treble/raw/android-8.1/cmds/Android.bp 2>/dev/null
 		fi
 		# fix kernel source missing (on pie)
 		sed 's;.*KERNEL_;//&;' -i vendor/$treble_generate/build/soong/Android.bp 2>/dev/null || true
@@ -591,11 +588,12 @@ function patch_things() {
 function gen_mk() {
 	if [[ -n "$gen_mk" ]]; then
 		ldir=${PWD}
+		gen_lunch=${gen_mk}_${gen_target}
+		gen_mk=$gen_lunch
 		cd device/phh/treble
 		cp $target_name.mk $gen_mk.mk
-		sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_mk}_${gen_target}@" -i $gen_mk.mk
-		sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_mk}_${gen_target}@" -i $gen_mk.mk
-		gen_lunch=${gen_mk}_${gen_target}
+		sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_mk}@" -i $gen_mk.mk
+		sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_mk}@" -i $gen_mk.mk
 		[ ! -z "$gen_sepolicy" ] && {
 			(echo "$gen_sepolicy" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
 			rm -f $gen_mk.mk ; mv $gen_mk.mk2 $gen_mk.mk
@@ -630,6 +628,7 @@ function build_variant() {
     fi
     [[ -n "$gen_lunch" ]] && lunch "$gen_lunch" || lunch "$1"
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
+    make $extra_make_options BUILD_NUMBER="$rom_fp" vndk-test-sepolicy
     [ -f "$OUT"/system.img ] && (
     echo -e "* ROM built sucessfully (release/$rom_fp)"
     cp "$OUT"/system.img release/"$rom_fp"/$rom_type-system-"$2".img 
