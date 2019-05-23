@@ -510,6 +510,7 @@ function init_local_manifest() {
         force_clone vendor/interfaces vendor_interfaces master
 	fi
 	force_clone vendor/hardware_overlay vendor_hardware_overlay master
+	force_clone vendor/vndk-tests vendor_vndk-tests master
 }
 
 function sync_repo() {
