@@ -134,9 +134,6 @@ Variants are dash-joined combinations of (in order):
 - A or A/B partition layout ("aonly" or "ab")
 - GApps selection
   * "vanilla" to not include GApps
-  * "gapps" to include opengapps
-  * "go" to include gapps go
-  * "floss" to include floss
 - SU selection ("su" or "nosu")
 - Build variant selection (optional)
   * "eng" for eng build
@@ -144,10 +141,8 @@ Variants are dash-joined combinations of (in order):
   * "userdebug" for debug build (default)
 
 Examples:
-- Treble ROM For ARM-A Without Gapps And SU:
+- GSI ROM For ARM-A Without Gapps And SU:
   * arm-aonly-vanilla-nosu-user
-- Treble ROM For ARM64-AB With Gapps And SU:
-  * arm64-ab-gapps-su
 EOF
 }
 
@@ -439,9 +434,9 @@ partition_layout_map[ab]=b
 
 declare -A gapps_selection_map
 gapps_selection_map[vanilla]=v
-gapps_selection_map[gapps]=g
-gapps_selection_map[go]=o
-gapps_selection_map[floss]=f
+#gapps_selection_map[gapps]=g
+#gapps_selection_map[go]=o
+#gapps_selection_map[floss]=f
 
 declare -A su_selection_map
 su_selection_map[su]=S
@@ -523,7 +518,7 @@ function clean_repo_folder() {
 }
 
 function add_mks() {
-	cp -r $(dirname "$0")/mks/. device/phh/treble
+	cp -r $(dirname "$0")/mks/* device/phh/treble
 }
 
 function add_files() {
@@ -554,25 +549,14 @@ function fix_missings() {
 }
 
 function patch_things() {
-	if [[ -n "$treble_generate" ]]; then
-		repodir="${PWD}"
-		rm -f device/*/sepolicy/common/private/genfs_contexts
-			(
-				cd device/phh/treble
-			        git clean -fdx
-				bash generate.sh "$treble_generate"
-				cd ../../..
-				bash vendor/interfaces/generate.sh
-			)
-		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
-	else
-		repodir="${PWD}"
-		cd device/phh/treble
-		bash generate.sh
-		cd ../../..
-		bash vendor/interfaces/generate.sh
-		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
-	fi
+    repodir="${PWD}"
+    rm -f device/*/sepolicy/common/private/genfs_contexts
+	cd device/phh/treble
+	git clean -fdx
+	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
+	cd ../../..
+	bash vendor/interfaces/generate.sh
+    bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
 }
 
 function gen_mk() {
