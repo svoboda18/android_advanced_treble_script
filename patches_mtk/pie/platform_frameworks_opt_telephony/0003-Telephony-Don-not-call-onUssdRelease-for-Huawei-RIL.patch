@@ -21,9 +21,9 @@ index 2a94fc5..a29ad3f 100644
  
              if (isUssdRelease) {
 -                found.onUssdRelease();
-+                (SystemProperties.getBoolean("persist.sys.radio.ussd.fix", false)) {
++                if (SystemProperties.getBoolean("persist.sys.radio.ussd.fix", false)) {
 +                    found.onUssdFinished(ussdMessage, isUssdRequest);
-+                else {
++                } else {
 +                    found.onUssdRelease();
 +                }
              } else if (isUssdError) {

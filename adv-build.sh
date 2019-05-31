@@ -486,7 +486,7 @@ function init_release() {
 }
 
 function init_main_repo() {
-	repo init --depth=1 -u "$mainrepo" -b "$mainbranch"
+	repo init -u "$mainrepo" -b "$mainbranch"
 }
 
 function force_clone() {
@@ -504,12 +504,13 @@ function force_clone() {
 function init_local_manifest() {
 	force_clone device/phh/treble device_phh_treble
         force_clone vendor/vndk vendor_vndk master
-	if [[ "$localManifestBranch" == *"9"* ]]; then
+	if [[ "$localManifestBranch" = *"9"* ]]; then
 	force_clone vendor/interfaces vendor_interfaces pie
+	force_clone vendor/hardware_overlay vendor_hardware_overlay pie
 	else
         force_clone vendor/interfaces vendor_interfaces master
-	fi
 	force_clone vendor/hardware_overlay vendor_hardware_overlay master
+	fi
 	force_clone vendor/vndk-tests vendor_vndk-tests master
 }
 
@@ -548,16 +549,8 @@ PRODUCT_COPY_FILES += \
 }
 
 function fix_missings() {
-	wget -O apns-full-conf.xml https://github.com/LineageOS/android_vendor_lineage/raw/lineage-16.0/prebuilt/common/etc/apns-conf.xml 2>/dev/null
 	mkdir -p device/sample/etc
-       	cp -r apns-full-conf.xml device/sample/etc/
-	rm -rf apns*.xml
-}
-
-function add_overlay() {
-	if [[ "$localManifestBranch" == *"9"* ]]; then
-		cp -r $(dirname "$0")/overlays/. device/phh/treble/overlay
-	fi
+	wget -O apns-full-conf.xml -P device/sample/etc https://github.com/LineageOS/android_vendor_lineage/raw/lineage-16.0/prebuilt/common/etc/apns-conf.xml 2>/dev/null
 }
 
 function patch_things() {
@@ -569,9 +562,7 @@ function patch_things() {
 			        git clean -fdx
 				bash generate.sh "$treble_generate"
 				cd ../../..
-				cd vendor/interfaces
-				bash generate.sh
-				cd ../..
+				bash vendor/interfaces/generate.sh
 			)
 		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
 	else
@@ -579,9 +570,7 @@ function patch_things() {
 		cd device/phh/treble
 		bash generate.sh
 		cd ../../..
-                cd vendor/interfaces
-                bash generate.sh
-                cd ../..
+		bash vendor/interfaces/generate.sh
 		bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
 	fi
 }
@@ -625,7 +614,7 @@ function check_dex() {
 function build_variant() {
     read -p "* Do you want to clean before starting build? (y/N) " choicer
     if [[ $choicer == *"y"* ]];then
-     make installclean
+    	make installclean
     fi
     [[ -n "$gen_lunch" ]] && lunch "$gen_lunch" || lunch "$1"
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
@@ -721,7 +710,6 @@ fi
 fix_missings
 add_mks
 add_files
-add_overlay
 
 read -p "- Do you want to start build now? (y/N) " choice3
 if [[ $choice3 == *"y"* ]];then
