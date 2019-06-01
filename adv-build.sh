@@ -56,7 +56,7 @@ fi
 
 export LC_ALL=C
 
-rom_fp="$(date +%y%m%d)"
+rom_fp="$(date +%y%m%d%S)"
 myname="$(basename "$0")"
 
 if [[ $(uname -s) = "Darwin" ]];then
@@ -158,6 +158,13 @@ function get_rom_type() {
             aosp90)
                 mainrepo="https://android.googlesource.com/platform/manifest.git"
                 mainbranch="android-9.0.0_r21"
+                localManifestBranch="android-9.0"
+                treble_generate=""
+                extra_make_options=""
+                ;;
+            evolutionx90)
+                mainrepo="https://github.com/Evolution-X/platform_manifest.git"
+                mainbranch="new"
                 localManifestBranch="android-9.0"
                 treble_generate=""
                 extra_make_options=""
@@ -528,7 +535,7 @@ function add_files() {
 			wget -P device/phh/treble/cmds/ https://github.com/phhusson/device_phh_treble/raw/android-8.1/cmds/Android.bp 2>/dev/null
 		fi
 		# fix kernel source missing (on pie)
-		sed 's;.*KERNEL_;//&;' -i vendor/$treble_generate/build/soong/Android.bp 2>/dev/null || true
+		sed 's;.*KERNEL_;//&;' -i vendor/aosp/build/soong/Android.bp 2>/dev/null || true
 	fi
 	find $(dirname "$0")/rfiles/ -name '*.rc' -exec cp -prv '{}' 'device/phh/treble/' ';' &> /dev/null
 	find $(dirname "$0")/rfiles/ -name '*.sh' -exec cp -prv '{}' 'device/phh/treble/' ';' &> /dev/null
@@ -555,7 +562,7 @@ function patch_things() {
 	git clean -fdx
 	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
 	cd ../../..
-	bash vendor/interfaces/generate.sh
+	bash vendor/interfaces/generate.sh || true
     bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
 }
 
@@ -563,11 +570,11 @@ function gen_mk() {
 	if [[ -n "$gen_mk" ]]; then
 		ldir=${PWD}
 		gen_lunch=${gen_mk}_${gen_target}
-		gen_mk=$gen_lunch
+		[ "$localManifestBranch" = *"9"* ] && gen_mk=$gen_lunch
 		cd device/phh/treble
 		cp $target_name.mk $gen_mk.mk
-		sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_mk}@" -i $gen_mk.mk
-		sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_mk}@" -i $gen_mk.mk
+		sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_lunch}@" -i $gen_mk.mk
+		sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_lunch}@" -i $gen_mk.mk
 		[ ! -z "$gen_sepolicy" ] && {
 			(echo "$gen_sepolicy" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
 			rm -f $gen_mk.mk ; mv $gen_mk.mk2 $gen_mk.mk
@@ -604,14 +611,18 @@ function build_variant() {
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
     make $extra_make_options BUILD_NUMBER="$rom_fp" vndk-test-sepolicy
     [ -f "$OUT"/system.img ] && (
-    echo -e "* ROM built sucessfully (release/$rom_fp)"
-    cp "$OUT"/system.img release/"$rom_fp"/$rom_type-system-"$2".img 
+    	echo -e "* ROM built sucessfully (release/$rom_fp)"
+    	cp "$OUT"/system.img release/"$rom_fp"/$rom_type-system-"$2".img 
     ) ; (
-    read -p "* Do you want to compress the built rom? (y/N) " zipch
-    if [[ $zipch == *"y"* ]]; then
-    cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-adv.zip $rom_type-*.img 2>/dev/null
-    fi
-    # upload, soon !
+    	read -p "* Do you want to compress the built gsi? (y/N) " zipch
+    	if [[ $zipch == *"y"* ]]; then
+    		cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-adv.zip $rom_type-*.img 2>/dev/null
+    	fi
+
+    	read -p "* Do you want to upload the built gsi? (y/N) (gdrive have to be installed) " up
+    	if [[ $up == *"y"* ]]; then
+		gdrive upload --share $rom_type-$target_name-adv.zip || echo "Please, install gdrive tool!"
+    	fi
     ) || echo -e "\nBUILD ERROR ! \n"
 }
 

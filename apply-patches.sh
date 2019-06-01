@@ -52,11 +52,6 @@ for project in $(cd $patches; echo *);do
 
 	# Apply patch one by one
 	for patch in $patches/$project/*.patch ;do
-		# Check if patch is already applied
-		if patch -f -p1 --dry-run -R < $patch > /dev/null;then
-			continue
-		fi
-
 		# First use patch, if failling fallback to am
 		if patch -f -p1 --dry-run < $patch > /dev/null;then
 			patch -f -p1 < $patch
