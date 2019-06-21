@@ -712,7 +712,7 @@ fi
 
 fix_missings
 add_mks
-add_files
+add_features
 
 read -p "- Do you want to start build now? (y/N) " choice3
 if [[ $choice3 == *"y"* ]];then
