@@ -27,18 +27,7 @@ set -e
 
 # Get full dirs locations, else patches wont be found
 repo="$(readlink -f -- $1)"
-
-# Decide to use msm or mtk patches?
-case "$2" in
-	msm) patches="$(readlink -f -- $0 |sed -e 's/apply-patches.sh//g')patches_msm" ;;
-	mtk) patches="$(readlink -f -- $0 |sed -e 's/apply-patches.sh//g')patches_mtk" ;;
-esac
-
-# Decide to use pie or oreo patches?
-case "$3" in
-	android-8.1) patches="$patches/oreo" ;;
-	android-9.0) patches="$patches/pie" ;;
-esac
+patches="$repo/patches"
 
 # Now start patching
 for project in $(cd $patches; echo *);do
@@ -52,8 +41,10 @@ for project in $(cd $patches; echo *);do
 
 	# Apply patch one by one
 	for patch in $patches/$project/*.patch ;do
-		# First use patch, if failling fallback to am
-		if patch -f -p1 --dry-run < $patch > /dev/null;then
+		# First use am, if failling fallback to patch
+		if git apply --check $patch;then
+			git am $patch
+		elif patch -f -p1 --dry-run < $patch > /dev/null;then
 			patch -f -p1 < $patch
 		else
 			echo Failed applying $(echo $patch |sed -e "s@$patches/@@")
