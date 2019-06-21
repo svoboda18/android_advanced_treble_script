@@ -528,6 +528,7 @@ function init_local_manifest() {
 		g_clone https://gitlab.nezorfla.me/opengapps/arm vendor/opengapps/sources/arm
 		g_clone https://gitlab.nezorfla.me/opengapps/arm64 vendor/opengapps/sources/arm64
 	fi
+	force_clone treble_patches patches
 }
 
 function sync_repo() {
@@ -572,8 +573,7 @@ function patch_things() {
 	git clean -fdx
 	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
 	cd ../../..
-	bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
-}
+	bash "$(dirname "$0")/apply-patches.sh" "$repodir"
 
 function gen_mk() {
 	if [[ -n "$gen_mk" ]]; then
