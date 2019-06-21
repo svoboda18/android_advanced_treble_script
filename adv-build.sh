@@ -134,6 +134,7 @@ Variants are dash-joined combinations of (in order):
 - A or A/B partition layout ("aonly" or "ab")
 - GApps selection
   * "vanilla" to not include GApps
+  * "gapps" to include opengapps
 - SU selection ("su" or "nosu")
 - Build variant selection (optional)
   * "eng" for eng build
@@ -441,7 +442,7 @@ partition_layout_map[ab]=b
 
 declare -A gapps_selection_map
 gapps_selection_map[vanilla]=v
-#gapps_selection_map[gapps]=g
+gapps_selection_map[gapps]=g
 #gapps_selection_map[go]=o
 #gapps_selection_map[floss]=f
 
@@ -503,6 +504,11 @@ function force_clone() {
 	localManifestBranch="$localManifestBranch_old"
 }
 
+function g_clone() {
+	[ -d "$2" ] && rm -rf $2
+	git clone --depth=1 $1 $2 $(echo $3)
+}
+
 function init_local_manifest() {
 	force_clone device/phh/treble device_phh_treble
         force_clone vendor/vndk vendor_vndk master
@@ -514,6 +520,14 @@ function init_local_manifest() {
 	force_clone vendor/hardware_overlay vendor_hardware_overlay master
 	fi
 	force_clone vendor/vndk-tests vendor_vndk-tests master
+	
+	read -p "- Do you want to sync gapps packages? (y/N) " g
+        if [[ $g == *"y"* ]];then
+		g_clone https://github.com/opengapps/aosp_build vendor/opengapps/build
+		g_clone https://gitlab.nezorfla.me/opengapps/all vendor/opengapps/sources/all
+		g_clone https://gitlab.nezorfla.me/opengapps/arm vendor/opengapps/sources/arm
+		g_clone https://gitlab.nezorfla.me/opengapps/arm64 vendor/opengapps/sources/arm64
+	fi
 }
 
 function sync_repo() {
@@ -528,15 +542,7 @@ function add_mks() {
 	cp -r $(dirname "$0")/mks/* device/phh/treble
 }
 
-function add_files() {
-	if [[ "$localManifestBranch" == *"9"* ]]; then
-		if [[ $target_chip = "mtk" ]]; then
-			rm -r device/phh/treble/cmds/Android.bp
-			wget -P device/phh/treble/cmds/ https://github.com/phhusson/device_phh_treble/raw/android-8.1/cmds/Android.bp 2>/dev/null
-		fi
-		# fix kernel source missing (on pie)
-		sed 's;.*KERNEL_;//&;' -i vendor/aosp/build/soong/Android.bp 2>/dev/null || true
-	fi
+function add_features() {
 	find $(dirname "$0")/rfiles/ -name '*.rc' -exec cp -prv '{}' 'device/phh/treble/' ';' &> /dev/null
 	find $(dirname "$0")/rfiles/ -name '*.sh' -exec cp -prv '{}' 'device/phh/treble/' ';' &> /dev/null
 
@@ -551,19 +557,22 @@ PRODUCT_COPY_FILES += \
 }
 
 function fix_missings() {
+	if [[ "$localManifestBranch" == *"9"* ]]; then
+		# fix kernel source missing (on pie)
+		sed 's;.*KERNEL_;//&;' -i vendor/aosp/build/soong/Android.bp 2>/dev/null || true
+	fi
 	mkdir -p device/sample/etc
 	wget -O apns-full-conf.xml -P device/sample/etc https://github.com/LineageOS/android_vendor_lineage/raw/lineage-16.0/prebuilt/common/etc/apns-conf.xml 2>/dev/null
 }
 
 function patch_things() {
-    repodir="${PWD}"
-    rm -f device/*/sepolicy/common/private/genfs_contexts
+   	repodir="${PWD}"
+    	rm -f device/*/sepolicy/common/private/genfs_contexts
 	cd device/phh/treble
 	git clean -fdx
 	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
 	cd ../../..
-	bash vendor/interfaces/generate.sh || true
-    bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
+	bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$target_chip" "$localManifestBranch"
 }
 
 function gen_mk() {
@@ -597,8 +606,8 @@ function check_dex() {
 			echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
 		fi
 	else
-		wget -O board-base.mk.bak https://github.com/phhusson/device_phh_treble/raw/$localManifestBranch/board-base.mk 2>/dev/null
-		rm -f device/phh/treble/board-base.mk ; cp -r board-base.mk.bak device/phh/treble/board-base.mk
+		rm -f device/phh/treble/board-base.mk
+		wget -O board-base.mk -P device/phh/treble/ https://github.com/phhusson/device_phh_treble/raw/$localManifestBranch/board-base.mk 2>/dev/null
 	fi
 }
 
@@ -618,7 +627,6 @@ function build_variant() {
     	if [[ $zipch == *"y"* ]]; then
     		cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-adv.zip $rom_type-*.img 2>/dev/null
     	fi
-
     	read -p "* Do you want to upload the built gsi? (y/N) (gdrive have to be installed) " up
     	if [[ $up == *"y"* ]]; then
 		gdrive upload --share $rom_type-$target_name-adv.zip || echo "Please, install gdrive tool!"
