@@ -27,7 +27,7 @@ set -e
 
 # Get full dirs locations, else patches wont be found
 repo="$(readlink -f -- $1)"
-patches="$repo/patches"
+patches="$repo/patches/patches"
 
 # Now start patching
 for project in $(cd $patches; echo *);do
@@ -41,15 +41,8 @@ for project in $(cd $patches; echo *);do
 
 	# Apply patch one by one
 	for patch in $patches/$project/*.patch ;do
-		# First use am, if failling fallback to patch
-		if git apply --check $patch;then
-			git am $patch
-		elif patch -f -p1 --dry-run < $patch > /dev/null;then
-			patch -f -p1 < $patch
-		else
-			echo Failed applying $(echo $patch |sed -e "s@$patches/@@")
-		fi
-
+		# First use patch tool, it is the best!
+		patch -f -p1 < $patch || echo "WARNING:`echo $patch |sed -e "s@$patches/@@"` may conflict, conflicts have to be manually fixed! (at $patch_target)" && true
 	done
 	popd
 done

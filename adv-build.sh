@@ -74,19 +74,13 @@ Usage Help:
 
 Syntax:
 
-  $myname [-j 2] <target chipset> <rom type> <variant> [<variant2> <variant3>..]
+  $myname [-j 2] <rom type> <variant> [<variant2> <variant3>..]
 
 Options:
 
   -j   number of parallel make workers (defaults to $jobs)
 
-Target chipset:
-
-  msm
-  mtk
-
 ROM types:
-
   aosp81
   aosp90
   aospa81
@@ -520,6 +514,7 @@ function init_local_manifest() {
 	force_clone vendor/hardware_overlay vendor_hardware_overlay master
 	fi
 	force_clone vendor/vndk-tests vendor_vndk-tests master
+	force_clone patches treble_patches
 	
 	read -p "- Do you want to sync gapps packages? (y/N) " g
         if [[ $g == *"y"* ]];then
@@ -528,7 +523,6 @@ function init_local_manifest() {
 		g_clone https://gitlab.nezorfla.me/opengapps/arm vendor/opengapps/sources/arm
 		g_clone https://gitlab.nezorfla.me/opengapps/arm64 vendor/opengapps/sources/arm64
 	fi
-	force_clone treble_patches patches
 }
 
 function sync_repo() {
@@ -544,8 +538,7 @@ function add_mks() {
 }
 
 function add_features() {
-	find $(dirname "$0")/rfiles/ -name '*.rc' -exec cp -prv '{}' 'device/phh/treble/' ';' &> /dev/null
-	find $(dirname "$0")/rfiles/ -name '*.sh' -exec cp -prv '{}' 'device/phh/treble/' ';' &> /dev/null
+	cp -r $(dirname "$0")/dt-scripts/* device/phh/treble
 
 	# add change_device_name to build
 	if ! grep -Eq 'change-device-name.sh' device/phh/treble/base.mk; then
@@ -574,6 +567,7 @@ function patch_things() {
 	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
 	cd ../../..
 	bash "$(dirname "$0")/apply-patches.sh" "$repodir"
+}
 
 function gen_mk() {
 	if [[ -n "$gen_mk" ]]; then
@@ -652,19 +646,17 @@ prepre_env
 if [[ $1 == "-j" ]]; then
 	re='^[0-9]+$'
 	if [[ $2 =~ $re ]] ; then
-		target_chip="$3"
 		jobs="$2"
-		rom_type="$4"
-		targets="$(($#-4))"
-		start='4'
+		rom_type="$3"
+		targets="$(($#-3))"
+		start='3'
 	else
 		echo -e "\nNot a jobs number: $2\n" ; help ; exit 1
 	fi
 else
-	target_chip="$1"
-	rom_type="$2"
-	targets="$(($#-2))"
-	start='2'
+	rom_type="$1"
+	targets="$(($#-1))"
+	start='1'
 fi
 
 get_rom_type "$rom_type"
