@@ -24,7 +24,7 @@
 ###############
 
 set -e
-ver=0.1
+ver=1
 
 ###############
 #             #
@@ -32,11 +32,12 @@ ver=0.1
 #             #
 ###############
 
-function wc() {
+function say_welcome() {
 cat << EOF
 
 **************************************************
-*        ADVANCED TREBLE ROM BUILD SCRIPT        *
+*      × ADVANCED TREBLE ROM BUILD SCRIPT ×      *
+*                    VERSION $ver			 *
 **************************************************
 *                                                *
 * ! Welcome To Advanced Treble OS Build Script ! *
@@ -44,9 +45,8 @@ cat << EOF
 **************************************************
 *      Created By SaMad SegMane (svoboda18)      *
 **************************************************
-
 EOF
-read -p "Press any key to continue.."
+read
 }
 
 function prepre_env() {
@@ -87,38 +87,39 @@ ROM types:
   aospa90
   aosip81
   aosip90
-  carbon81
-  carbon90
-  e-1.0
-  e-0.2
-  lineage151
-  lineage160
-  rr81
-  rr90
-  dot81
-  dot90
-  du81
-  du90
-  bliss81
-  bliss90
-  xpe81
-  xpe90
-  pixel81
-  pixel90
-  crdroid81
-  crdroid90
-  mokee81
-  mokee90
   aicp81
   aicp90
   aokp81
   aokp90
   aex81
   aex90
-  slim81
-  slim90
+  bliss81
+  bliss90
+  carbon81
+  carbon90
+  crdroid81
+  crdroid90
+  dot81
+  dot90
+  du81
+  du90
+  e-pie
+  e-oreo
+  evox90
   havoc81
   havoc90
+  lineage151
+  lineage160
+  mokee81
+  mokee90
+  pixel81
+  pixel90
+  rr81
+  rr90
+  slim81
+  slim90
+  xpe81
+  xpe90
 
 Variants are dash-joined combinations of (in order):
 - Processor type
@@ -157,9 +158,9 @@ function get_rom_type() {
                 treble_generate=""
                 extra_make_options=""
                 ;;
-            evolutionx90)
+            evox90)
                 mainrepo="https://github.com/Evolution-X/platform_manifest.git"
-                mainbranch="new"
+                mainbranch="pie"
                 localManifestBranch="android-9.0"
                 treble_generate=""
                 extra_make_options=""
@@ -192,16 +193,16 @@ function get_rom_type() {
 		treble_generate="carbon"
 		extra_make_options="WITHOUT_CHECK_API=true"
 		;;
-	    e-1.0)
+	    e-oreo)
 		mainrepo="https://gitlab.e.foundation/e/os/android/"
 		mainbranch="v1-oreo"
 		localManifestBranch="android-8.1"
 		treble_generate="lineage"
 		extra_make_options="WITHOUT_CHECK_API=true"
 		;;
-            e-0.2)
+            e-pie)
                 mainrepo="https://gitlab.e.foundation/e/os/android/"
-                mainbranch="eelo-0.2"
+                mainbranch="v1-pie"
                 localManifestBranch="android-9.0"
                 treble_generate="lineage"
                 extra_make_options="WITHOUT_CHECK_API=true"
@@ -514,7 +515,6 @@ function init_local_manifest() {
 	force_clone vendor/hardware_overlay vendor_hardware_overlay master
 	fi
 	force_clone vendor/vndk-tests vendor_vndk-tests master
-	force_clone patches treble_patches
 	
 	read -p "- Do you want to sync gapps packages? (y/N) " g
         if [[ $g == *"y"* ]];then
@@ -553,7 +553,7 @@ PRODUCT_COPY_FILES += \
 function fix_missings() {
 	if [[ "$localManifestBranch" == *"9"* ]]; then
 		# fix kernel source missing (on pie)
-		sed 's;.*KERNEL_;//&;' -i vendor/aosp/build/soong/Android.bp 2>/dev/null || true
+		sed 's;.*KERNEL_;//&;' -i vendor/*/build/soong/Android.bp 2>/dev/null || true
 	fi
 	mkdir -p device/sample/etc
 	wget -O apns-full-conf.xml -P device/sample/etc https://github.com/LineageOS/android_vendor_lineage/raw/lineage-16.0/prebuilt/common/etc/apns-conf.xml 2>/dev/null
@@ -566,7 +566,7 @@ function patch_things() {
 	git clean -fdx
 	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
 	cd ../../..
-	bash "$(dirname "$0")/apply-patches.sh" "$repodir"
+	bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
 }
 
 function gen_mk() {
@@ -600,8 +600,7 @@ function check_dex() {
 			echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
 		fi
 	else
-		rm -f device/phh/treble/board-base.mk
-		wget -O board-base.mk -P device/phh/treble/ https://github.com/phhusson/device_phh_treble/raw/$localManifestBranch/board-base.mk 2>/dev/null
+		sed 's;.*PREOPT.*;#&;' -i device/phh/treble/board-base.mk
 	fi
 }
 
@@ -673,7 +672,7 @@ if [[ -z "$mainrepo" || ${#variant_codes[*]} -eq 0 || "$1" == "--help" ]]; then
 	>&2 help
 	exit 1
 else
-	wc
+	say_welcome
 fi
 
 python=$(python -V 2>&1 || true)
