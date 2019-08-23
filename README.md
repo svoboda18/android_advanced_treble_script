@@ -9,7 +9,6 @@
       - Faster and stable syncing.
       - Patching from HEAD, always updated, no fails.
       - Prompting and take user choice for every step.
-   * Binds target rom with certification patch, your device info are correct!
    * Fixes some common build errors, lot of roms are supported!
 
 # Usage Info:

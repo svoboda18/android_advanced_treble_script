@@ -146,14 +146,14 @@ function get_rom_type() {
         case "$1" in
             aosp81)
                 mainrepo="https://android.googlesource.com/platform/manifest.git"
-                mainbranch="android-8.1.0_r48"
+                mainbranch="android-8.1.0_r65"
                 localManifestBranch="android-8.1"
                 treble_generate=""
                 extra_make_options=""
                 ;;
             aosp90)
                 mainrepo="https://android.googlesource.com/platform/manifest.git"
-                mainbranch="android-9.0.0_r21"
+                mainbranch="android-9.0.0_r47"
                 localManifestBranch="android-9.0"
                 treble_generate=""
                 extra_make_options=""
@@ -537,19 +537,6 @@ function add_mks() {
 	cp -r $(dirname "$0")/mks/* device/phh/treble
 }
 
-function add_features() {
-	cp -r $(dirname "$0")/dt-scripts/* device/phh/treble
-
-	# add change_device_name to build
-	if ! grep -Eq 'change-device-name.sh' device/phh/treble/base.mk; then
-		(cat device/phh/treble/base.mk ; echo '
-PRODUCT_COPY_FILES += \
-	device/phh/treble/device.rc:system/etc/init/device.rc \
-	device/phh/treble/change-device-name.sh:system/bin/change-device-name.sh') | cat - >> device/phh/treble/base.mk2
-		rm -f device/phh/treble/base.mk ; mv device/phh/treble/base.mk2 device/phh/treble/base.mk
-	fi
-}
-
 function fix_missings() {
 	if [[ "$localManifestBranch" == *"9"* ]]; then
 		# fix kernel source missing (on pie)
@@ -593,12 +580,10 @@ function gen_mk() {
 function check_dex() {
 	read -p "* Do you want to disable pre-opt rom apps? (y/N) " dexa
 	if [[ "$dexa" == *"y"* ]]; then
-		if ! grep -Eq 'DEXPREOPT' device/phh/treble/board-base.mk; then
-			echo "WITH_DEXPREOPT := false" >> device/phh/treble/board-base.mk
-			echo "DISABLE_DEXPREOPT := true" >> device/phh/treble/board-base.mk
-			echo "DONT_DEXPREOPT_PREBUILTS := true" >> device/phh/treble/board-base.mk
-			echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
-		fi
+		echo "WITH_DEXPREOPT := false" >> device/phh/treble/board-base.mk
+		echo "DISABLE_DEXPREOPT := true" >> device/phh/treble/board-base.mk
+		echo "DONT_DEXPREOPT_PREBUILTS := true" >> device/phh/treble/board-base.mk
+		echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
 	else
 		sed 's;.*PREOPT.*;#&;' -i device/phh/treble/board-base.mk
 	fi
@@ -620,7 +605,7 @@ function build_variant() {
     	if [[ $zipch == *"y"* ]]; then
     		cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-adv.zip $rom_type-*.img 2>/dev/null
     	fi
-    	read -p "* Do you want to upload the built gsi? (y/N) (gdrive have to be installed) " up
+    	read -p "* Do you want to upload the built gsi? (y/N) " up
     	if [[ $up == *"y"* ]]; then
 		gdrive upload --share $rom_type-$target_name-adv.zip || echo "Please, install gdrive tool!"
     	fi
@@ -703,7 +688,6 @@ fi
 
 fix_missings
 add_mks
-add_features
 
 read -p "- Do you want to start build now? (y/N) " choice3
 if [[ $choice3 == *"y"* ]];then
