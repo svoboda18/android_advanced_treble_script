@@ -75,12 +75,15 @@ Usage Help:
 Syntax:
 
   $myname [-j 2] <rom type> <variant> [<variant2> <variant3>..]
+  []: that options are optimal.
+  <>: that options are required.
 
 Options:
 
   -j   number of parallel make workers (defaults to $jobs)
 
 ROM types:
+
   aosp81
   aosp90
   aospa81
@@ -508,20 +511,20 @@ function init_local_manifest() {
 	force_clone device/phh/treble device_phh_treble
         force_clone vendor/vndk vendor_vndk master
 	if [[ "$localManifestBranch" = *"9"* ]]; then
-	force_clone vendor/interfaces vendor_interfaces pie
-	force_clone vendor/hardware_overlay vendor_hardware_overlay pie
+		force_clone vendor/interfaces vendor_interfaces pie
+		force_clone vendor/hardware_overlay vendor_hardware_overlay pie
 	else
-        force_clone vendor/interfaces vendor_interfaces master
-	force_clone vendor/hardware_overlay vendor_hardware_overlay master
+        	force_clone vendor/interfaces vendor_interfaces master
+		force_clone vendor/hardware_overlay vendor_hardware_overlay master
 	fi
 	force_clone vendor/vndk-tests vendor_vndk-tests master
 	
 	read -p "- Do you want to sync gapps packages? (y/N) " g
         if [[ $g == *"y"* ]];then
 		g_clone https://github.com/opengapps/aosp_build vendor/opengapps/build
-		g_clone https://gitlab.nezorfla.me/opengapps/all vendor/opengapps/sources/all
-		g_clone https://gitlab.nezorfla.me/opengapps/arm vendor/opengapps/sources/arm
-		g_clone https://gitlab.nezorfla.me/opengapps/arm64 vendor/opengapps/sources/arm64
+		g_clone https://gitlab.opengapps.org/opengapps/all vendor/opengapps/sources/all
+		g_clone https://gitlab.opengapps.org/opengapps/arm vendor/opengapps/sources/arm
+		g_clone https://gitlab.opengapps.org/opengapps/arm64 vendor/opengapps/sources/arm64
 	fi
 }
 
@@ -541,9 +544,11 @@ function fix_missings() {
 	if [[ "$localManifestBranch" == *"9"* ]]; then
 		# fix kernel source missing (on pie)
 		sed 's;.*KERNEL_;//&;' -i vendor/*/build/soong/Android.bp 2>/dev/null || true
+		rm -rf vendor/*/packages/overlays/NoCutout*
 	fi
 	mkdir -p device/sample/etc
-	wget -O apns-full-conf.xml -P device/sample/etc https://github.com/LineageOS/android_vendor_lineage/raw/lineage-16.0/prebuilt/common/etc/apns-conf.xml 2>/dev/null
+	wget --output-document=device/sample/etc/apns-full-conf.xml https://github.com/LineageOS/android_vendor_lineage/raw/lineage-16.0/prebuilt/common/etc/apns-conf.xml 2>/dev/null
+
 }
 
 function patch_things() {
@@ -553,7 +558,7 @@ function patch_things() {
 	git clean -fdx
 	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
 	cd ../../..
-	bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch"
+	bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch" | tee -a release/"$rom_fp"/patch-"$rom_fp".log
 }
 
 function gen_mk() {
@@ -597,19 +602,19 @@ function build_variant() {
     [[ -n "$gen_lunch" ]] && lunch "$gen_lunch" || lunch "$1"
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
     make $extra_make_options BUILD_NUMBER="$rom_fp" vndk-test-sepolicy
-    [ -f "$OUT"/system.img ] && (
+    [ -f "$OUT"/system.img ] && {
     	echo -e "* ROM built sucessfully (release/$rom_fp)"
     	cp "$OUT"/system.img release/"$rom_fp"/$rom_type-system-"$2".img 
-    ) ; (
+
     	read -p "* Do you want to compress the built gsi? (y/N) " zipch
-    	if [[ $zipch == *"y"* ]]; then
-    		cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-adv.zip $rom_type-*.img 2>/dev/null
-    	fi
+    		if [[ $zipch == *"y"* ]]; then
+    			cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-adv.zip $rom_type-*.img 2>/dev/null
+	    	fi
     	read -p "* Do you want to upload the built gsi? (y/N) " up
-    	if [[ $up == *"y"* ]]; then
-		gdrive upload --share $rom_type-$target_name-adv.zip || echo "Please, install gdrive tool!"
-    	fi
-    ) || echo -e "\nBUILD ERROR ! \n"
+    		if [[ $up == *"y"* ]]; then
+			gdrive upload --share $rom_type-$target_name-adv.zip || echo "Please, install gdrive tool!"
+    		fi
+    } || echo -e "\nBUILD ERROR ! \n"
 }
 
 function jack_env() {
@@ -683,10 +688,10 @@ fi
 
 read -p "- Do you want to patch? (y/N) " choice2
 if [[ $choice2 == *"y"* ]];then
+	fix_missings
 	patch_things
 fi
 
-fix_missings
 add_mks
 
 read -p "- Do you want to start build now? (y/N) " choice3

@@ -235,7 +235,7 @@ for FOLDER in ${SUBS_REPOS}; do
     git reset --hard HEAD
 
     # PICK THE COMMITS IF EVERYTHING CHECKS OUT
-     ([ ${FOLDER} = "system/vold" ] && $PIE && git cherry-pick --keep-redundant-commits --strategy=recursive -X theirs 13a34a80c433dd2a5a2c195b3c568990ef9908fd^..${FIRST_HASH}) || git cherry-pick --keep-redundant-commits --strategy=recursive -X theirs ${SECOND_HASH}^..${FIRST_HASH}
+     ([ ${FOLDER} = "system/vold" ] && $PIE && git cherry-pick --keep-redundant-commits --strategy=recursive -X ours 13a34a80c433dd2a5a2c195b3c568990ef9908fd^..${FIRST_HASH}) || git cherry-pick --keep-redundant-commits --strategy=recursive -X ours ${SECOND_HASH}^..${FIRST_HASH}
     
     # ADD TO RESULT STRING
     if [[ $? -ne 0 ]]; then
