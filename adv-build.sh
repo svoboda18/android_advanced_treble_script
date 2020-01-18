@@ -692,8 +692,8 @@ if [[ "$choice" == *"y"* ]];then
 	if [[ $choicec == *"y"* ]];then
 		clean_repo_folder
 	fi
-	#init_main_repo
-	#sync_repo
+	init_main_repo
+	sync_repo
 	init_local_manifest
 fi
 
