@@ -518,7 +518,7 @@ function g_clone() {
 function init_local_manifest() {
 	force_clone device/phh/treble device_phh_treble
         force_clone vendor/vndk vendor_vndk master
-	if [[ "$localManifestBranch" = *"9"* ]]; then
+	if [[ "$localManifestBranch" = *"9"* || "$localManifestBranch" = *"10"* ]]; then
 		force_clone vendor/interfaces vendor_interfaces pie
 		force_clone vendor/hardware_overlay vendor_hardware_overlay pie
 	else
@@ -692,8 +692,8 @@ if [[ "$choice" == *"y"* ]];then
 	if [[ $choicec == *"y"* ]];then
 		clean_repo_folder
 	fi
-	init_main_repo
-	sync_repo
+	#init_main_repo
+	#sync_repo
 	init_local_manifest
 fi
 
@@ -709,7 +709,7 @@ read -p "- Do you want to start build now? (y/N) " choice3
 if [[ $choice3 == *"y"* ]];then
 	check_dex
 	jack_env
-    source build/envsetup.sh 2>&1
+        source build/envsetup.sh 2>&1
 	for (( idx=0; idx < ${#variant_codes[*]}; idx++ )); do
 		target_name=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
 		gen_mk
