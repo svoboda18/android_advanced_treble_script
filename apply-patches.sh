@@ -154,6 +154,7 @@ while [[ $# -ge 2 ]]; do
     case "$2" in
         android-8.1)
 	    PIE=false
+	    Q=false
             BRANCH=android-8.1.0_r65-phh
 SUBS_REPOS="
 build
@@ -170,7 +171,7 @@ system/vold"
 ;;
         android-9.0)
             PIE=true
-            BRANCH=android-9.0.0_r47-phh
+            BRANCH=android-9.0.0_r50-r47-phh
 SUBS_REPOS="
 build
 external/selinux
@@ -181,6 +182,29 @@ frameworks/opt/net/wifi
 frameworks/opt/telephony
 packages/apps/Settings
 packages/services/Telephony
+system/bt
+system/core
+system/netd
+system/sepolicy
+system/vold"
+;;
+    android-10.0)
+       Q=true
+       BRANCH=android-10.0.0_r14-phh
+SUBS_REPOS="
+bionic
+bootable/recovery
+build
+external/selinux
+external/skia
+frameworks/av
+frameworks/base
+frameworks/native
+frameworks/opt/net/wifi
+frameworks/opt/telephony
+packages/apps/Settings
+packages/services/Telephony
+system/bpf
 system/bt
 system/core
 system/netd
@@ -235,7 +259,9 @@ for FOLDER in ${SUBS_REPOS}; do
     git reset --hard HEAD
 
     # PICK THE COMMITS IF EVERYTHING CHECKS OUT
-     ([ ${FOLDER} = "system/vold" ] && $PIE && git cherry-pick --keep-redundant-commits --strategy=recursive -X ours 13a34a80c433dd2a5a2c195b3c568990ef9908fd^..${FIRST_HASH}) || git cherry-pick --keep-redundant-commits --strategy=recursive -X ours ${SECOND_HASH}^..${FIRST_HASH}
+      [ ${FOLDER} = "system/vold" ] && {
+        $PIE && git cherry-pick --keep-redundant-commits --strategy=recursive -X ours e5bca7db7223db865e5a2fe2549f881df032a877^..${FIRST_HASH} || $Q && git cherry-pick --keep-redundant-commits --strategy=recursive -X ours 8cda1f026e9831d99794ca330ff58da21f973325^..${FIRST_HASH}
+      } || git cherry-pick --keep-redundant-commits --strategy=recursive -X ours ${SECOND_HASH}^..${FIRST_HASH}
     
     # ADD TO RESULT STRING
     if [[ $? -ne 0 ]]; then

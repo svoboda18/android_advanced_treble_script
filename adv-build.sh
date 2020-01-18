@@ -74,7 +74,7 @@ Usage Help:
 
 Syntax:
 
-  $myname [-j 2] <rom type> <variant> [<variant2> <variant3>..]
+  bash $myname [-j 2] <rom type> <variant> [<variant2> <variant3>..]
   []: that options are optimal.
   <>: that options are required.
 
@@ -86,6 +86,7 @@ ROM types:
 
   aosp81
   aosp90
+  aosp100
   aospa81
   aospa90
   aosip81
@@ -136,12 +137,12 @@ Variants are dash-joined combinations of (in order):
 - SU selection ("su" or "nosu")
 - Build variant selection (optional)
   * "eng" for eng build
-  * "user" for prod build
+  * "user" for prod build (some errors are expected)
   * "userdebug" for debug build (default)
 
 Examples:
 - GSI ROM For ARM-A Without Gapps And SU:
-  * arm-aonly-vanilla-nosu-user
+  * arm-aonly-vanilla-nosu
 EOF
 }
 
@@ -156,8 +157,15 @@ function get_rom_type() {
                 ;;
             aosp90)
                 mainrepo="https://android.googlesource.com/platform/manifest.git"
-                mainbranch="android-9.0.0_r47"
+                mainbranch="android-9.0.0_r50"
                 localManifestBranch="android-9.0"
+                treble_generate=""
+                extra_make_options=""
+                ;;
+            aosp100)
+                mainrepo="https://android.googlesource.com/platform/manifest.git"
+                mainbranch="android-10.0.0_r14"
+                localManifestBranch="android-10.0"
                 treble_generate=""
                 extra_make_options=""
                 ;;
@@ -504,7 +512,7 @@ function force_clone() {
 
 function g_clone() {
 	[ -d "$2" ] && rm -rf $2
-	git clone --depth=1 $1 $2 $(echo $3)
+	git clone --depth=1 $1 $2 $3
 }
 
 function init_local_manifest() {
@@ -541,13 +549,13 @@ function add_mks() {
 }
 
 function fix_missings() {
-	if [[ "$localManifestBranch" == *"9"* ]]; then
-		# fix kernel source missing (on pie)
+	if [[ "$localManifestBranch" == *"9"* || "$localManifestBranch" == *"10"* ]]; then
+		# fix kernel source missing (on pie/q)
 		sed 's;.*KERNEL_;//&;' -i vendor/*/build/soong/Android.bp 2>/dev/null || true
 		rm -rf vendor/*/packages/overlays/NoCutout*
 	fi
 	mkdir -p device/sample/etc
-	wget --output-document=device/sample/etc/apns-full-conf.xml https://github.com/LineageOS/android_vendor_lineage/raw/lineage-16.0/prebuilt/common/etc/apns-conf.xml 2>/dev/null
+	wget --output-document=device/sample/etc/apns-full-conf.xml https://github.com/LineageOS/android_vendor_lineage/raw/lineage-17.0/prebuilt/common/etc/apns-conf.xml 2>/dev/null
 
 }
 
@@ -585,12 +593,15 @@ function gen_mk() {
 function check_dex() {
 	read -p "* Do you want to disable pre-opt rom apps? (y/N) " dexa
 	if [[ "$dexa" == *"y"* ]]; then
-		echo "WITH_DEXPREOPT := false" >> device/phh/treble/board-base.mk
-		echo "DISABLE_DEXPREOPT := true" >> device/phh/treble/board-base.mk
-		echo "DONT_DEXPREOPT_PREBUILTS := true" >> device/phh/treble/board-base.mk
-		echo "LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
+		echo -e "
+WITH_DEXPREOPT := false 
+DISABLE_DEXPREOPT := true
+DONT_DEXPREOPT_PREBUILTS := true
+LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
 	else
-		sed 's;.*PREOPT.*;#&;' -i device/phh/treble/board-base.mk
+		cd device/phh/treble
+		git checkout -- board-base.mk
+		cd ../../..
 	fi
 }
 
@@ -698,7 +709,7 @@ read -p "- Do you want to start build now? (y/N) " choice3
 if [[ $choice3 == *"y"* ]];then
 	check_dex
 	jack_env
-        . build/envsetup.sh
+    source build/envsetup.sh 2>&1
 	for (( idx=0; idx < ${#variant_codes[*]}; idx++ )); do
 		target_name=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
 		gen_mk
