@@ -46,7 +46,7 @@ cat << EOF
 *      Created By SaMad SegMane (svoboda18)      *
 **************************************************
 EOF
-read
+sleep 2s
 }
 
 function prepre_env() {

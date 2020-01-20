@@ -171,7 +171,7 @@ system/vold"
 ;;
         android-9.0)
             PIE=true
-            BRANCH=android-9.0.0_r50-r47-phh
+            BRANCH=android-9.0.0_r52-r47-phh
 SUBS_REPOS="
 build
 external/selinux
@@ -190,7 +190,7 @@ system/vold"
 ;;
     android-10.0)
        Q=true
-       BRANCH=android-10.0.0_r14-phh
+       BRANCH=android-10.0.0_r25-phh
 SUBS_REPOS="
 bionic
 bootable/recovery
@@ -260,8 +260,8 @@ for FOLDER in ${SUBS_REPOS}; do
 
     # PICK THE COMMITS IF EVERYTHING CHECKS OUT
       [ ${FOLDER} = "system/vold" ] && {
-        $PIE && git cherry-pick --keep-redundant-commits --strategy=recursive -X ours e5bca7db7223db865e5a2fe2549f881df032a877^..${FIRST_HASH} || $Q && git cherry-pick --keep-redundant-commits --strategy=recursive -X ours 8cda1f026e9831d99794ca330ff58da21f973325^..${FIRST_HASH}
-      } || git cherry-pick --keep-redundant-commits --strategy=recursive -X ours ${SECOND_HASH}^..${FIRST_HASH}
+        $PIE && git cherry-pick --allow-empty-message --keep-redundant-commits --strategy-option thiers e5bca7db7223db865e5a2fe2549f881df032a877^..${FIRST_HASH} || $Q && git cherry-pick --allow-empty-message --keep-redundant-commits --strategy-option thiers 8cda1f026e9831d99794ca330ff58da21f973325^..${FIRST_HASH}
+      } || git cherry-pick --allow-empty-message --keep-redundant-commits --strategy-option thiers ${SECOND_HASH}^..${FIRST_HASH}
     
     # ADD TO RESULT STRING
     if [[ $? -ne 0 ]]; then
