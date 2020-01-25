@@ -24,7 +24,13 @@
 ###############
 
 set -e
-ver=1
+myname="$(basename "$0")"
+BLD="\033[1m"
+GRN="\033[01;32m"
+RED="\033[01;31m"
+YLW="\033[01;33m"
+RST="\033[0m"
+VER='1.5' 
 
 ###############
 #             #
@@ -32,21 +38,33 @@ ver=1
 #             #
 ###############
 
-function say_welcome() {
-cat << EOF
+function printText() {
+    echo -e "${GRN}===$( for i in $( seq ${#1} ); do echo -e "=\c"; done )==="
+    echo -e "=  $( for i in $( seq ${#1} ); do echo -e " \c"; done )  ="
+    echo -e "=  ${RST}${1}${GRN}  ="
+    echo -e "=  $( for i in $( seq ${#1} ); do echo -e " \c"; done )  ="
+    echo -e "===$( for i in $( seq ${#1} ); do echo -e "=\c"; done )==="
+    echo -e ${RST}
+}
 
-**************************************************
-*      × ADVANCED TREBLE ROM BUILD SCRIPT ×      *
-*                    VERSION $ver			 *
-**************************************************
-*                                                *
-* ! Welcome To Advanced Treble OS Build Script ! *
-*                                                *
-**************************************************
-*      Created By SaMad SegMane (svoboda18)      *
-**************************************************
-EOF
-sleep 2s
+function reportError() {
+    echo -e ""
+    echo -e ${RED}"${1}"${RST} 
+    echo -e ""
+    echo -e ${GRN}"Run \"bash $myname --help\" for usage information."${RST} 
+    echo -e ""
+    exit 1
+}
+
+function reportWarning() {
+    echo -e ${YLW}"${1}"${RST}
+}
+
+function say_welcome() {
+
+printText "× ADVANCED GSI IMAGE BUILD SCRIPT $VER ×"
+
+sleep 0.8s
 }
 
 function prepre_env() {
@@ -56,8 +74,7 @@ fi
 
 export LC_ALL=C
 
-rom_fp="$(date +%y%m%d%S)"
-myname="$(basename "$0")"
+rom_fp="$(date +%Y%m%d%M-adv)"
 
 if [[ $(uname -s) = "Darwin" ]];then
 	jobs=$(sysctl -n hw.ncpu)
@@ -68,19 +85,19 @@ fi
 
 function help() {
 cat <<EOF
-Advanced Treble ROM Builder Script v$ver by SaMad SegMane (svoboda18)
+Advanced GSI ROM Builder Script v$VER by SaMad SegMane (svoboda18)
 
 Usage Help:
 
 Syntax:
 
-  bash $myname [-j 2] <rom type> <variant> [<variant2> <variant3>..]
-  []: that options are optimal.
+  bash $myname [-j <number of threads>] <rom type> <variant> [<variant2> <variant3>..]
+  []: that options are optional.
   <>: that options are required.
 
 Options:
 
-  -j   number of parallel make workers (defaults to $jobs)
+  -j number of parallel make workers (defaults to $jobs)
 
 ROM types:
 
@@ -134,14 +151,16 @@ Variants are dash-joined combinations of (in order):
 - GApps selection
   * "vanilla" to not include GApps
   * "gapps" to include opengapps
-- SU selection ("su" or "nosu")
+- SU selection 
+  * "su" with root permissions
+  * "nosu" without root permissions
 - Build variant selection (optional)
   * "eng" for eng build
   * "user" for prod build (some errors are expected)
   * "userdebug" for debug build (default)
 
 Examples:
-- GSI ROM For ARM-A Without Gapps And SU:
+- GSI ROM for ARM-A without Gapps and SU:
   * arm-aonly-vanilla-nosu
 EOF
 }
@@ -157,14 +176,14 @@ function get_rom_type() {
                 ;;
             aosp90)
                 mainrepo="https://android.googlesource.com/platform/manifest.git"
-                mainbranch="android-9.0.0_r50"
+                mainbranch="android-9.0.0_r52"
                 localManifestBranch="android-9.0"
                 treble_generate=""
                 extra_make_options=""
                 ;;
             aosp100)
                 mainrepo="https://android.googlesource.com/platform/manifest.git"
-                mainbranch="android-10.0.0_r14"
+                mainbranch="android-10.0.0_r25"
                 localManifestBranch="android-10.0"
                 treble_generate=""
                 extra_make_options=""
@@ -437,7 +456,7 @@ function get_rom_type() {
                 extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
 	    *)
-		echo -e "\nUnknown ROM type: $1\n" ; help ; exit 1
+		reportError "Unknown ROM type: $([ -z $1 ] && echo \(null\) || echo $1)"
 		;;
         esac
 }
@@ -449,8 +468,6 @@ partition_layout_map[ab]=b
 declare -A gapps_selection_map
 gapps_selection_map[vanilla]=v
 gapps_selection_map[gapps]=g
-#gapps_selection_map[go]=o
-#gapps_selection_map[floss]=f
 
 declare -A su_selection_map
 su_selection_map[su]=S
@@ -464,11 +481,10 @@ function parse_variant() {
     local gapps_selection=${gapps_selection_map[${pieces[2]}]}
     local su_selection=${su_selection_map[${pieces[3]}]}
     local build_type_selection=${pieces[4]}
-
+    
+    
     if [[ -z "$processor_type" || -z "$partition_layout" || -z "$gapps_selection" || -z "$su_selection" ]]; then
-        >&2 echo -e "\nInvalid defined variant: $1 \n"
-        >&2 help
-        exit 2
+       >&2 reportError "Invalid defined variant: $1"
     fi
 
     echo "treble_${processor_type}_${partition_layout}${gapps_selection}${su_selection}-${build_type_selection}"
@@ -486,8 +502,9 @@ function get_variants() {
                 variant_codes[${#variant_codes[*]}]=$(parse_variant "$1-userdebug")
                 variant_names[${#variant_names[*]}]="$1"
                 ;;
+            *) reportError "Invalid defined variant: $1"
+                ;;
         esac
-        shift
 }
 
 function init_release() {
@@ -501,24 +518,23 @@ function init_main_repo() {
 function force_clone() {
 	local dir="$1"
 	local repo="$2"
-        localManifestBranch_old="$localManifestBranch"
-	[ -z "$3" ] || localManifestBranch="$3"
 	
 	[ -d "$dir" ] && rm -rf "$dir"
-	git clone https://github.com/phhusson/"$repo" "$dir" -b "$localManifestBranch"
-	
-	localManifestBranch="$localManifestBranch_old"
+	git clone https://github.com/phhusson/"$repo" "$dir" -b "$( ([ -z $3 ] && echo $localManifestBranch) || echo $3)"
 }
 
 function g_clone() {
-	[ -d "$2" ] && rm -rf $2
-	git clone --depth=1 $1 $2 $3
+   local dir="$2"
+   local repo="$1"
+   
+   [ -d "$dir" ] && rm -rf "$dir"
+   git clone --depth=1 "$repo" "$dir"
 }
 
 function init_local_manifest() {
 	force_clone device/phh/treble device_phh_treble
         force_clone vendor/vndk vendor_vndk master
-	if [[ "$localManifestBranch" = *"9"* || "$localManifestBranch" = *"10"* ]]; then
+	if [[ "$localManifestBranch" != *"8"* ]]; then
 		force_clone vendor/interfaces vendor_interfaces pie
 		force_clone vendor/hardware_overlay vendor_hardware_overlay pie
 	else
@@ -549,7 +565,7 @@ function add_mks() {
 }
 
 function fix_missings() {
-	if [[ "$localManifestBranch" == *"9"* || "$localManifestBranch" == *"10"* ]]; then
+	if [[ "$localManifestBranch" != *"8"* ]]; then
 		# fix kernel source missing (on pie/q)
 		sed 's;.*KERNEL_;//&;' -i vendor/*/build/soong/Android.bp 2>/dev/null || true
 		rm -rf vendor/*/packages/overlays/NoCutout*
@@ -566,33 +582,13 @@ function patch_things() {
 	git clean -fdx
 	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
 	cd ../../..
-	bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch" | tee -a release/"$rom_fp"/patch-"$rom_fp".log
-}
-
-function gen_mk() {
-	if [[ -n "$gen_mk" ]]; then
-		ldir=${PWD}
-		gen_lunch=${gen_mk}_${gen_target}
-		[ "$localManifestBranch" = *"9"* ] && gen_mk=$gen_lunch
-		cd device/phh/treble
-		cp $target_name.mk $gen_mk.mk
-		sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_lunch}@" -i $gen_mk.mk
-		sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_lunch}@" -i $gen_mk.mk
-		[ ! -z "$gen_sepolicy" ] && {
-			(echo "$gen_sepolicy" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
-			rm -f $gen_mk.mk ; mv $gen_mk.mk2 $gen_mk.mk
-		}
-		[ ! -z "$gen_config" ] && {
-			(echo "$gen_config" ; cat $gen_mk.mk) | cat - >> $gen_mk.mk2
-			rm -f $gen_mk.mk ; mv $gen_mk.mk2 $gen_mk.mk
-		}
-		cd $ldir
-	fi
+	bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch" | tee -a release/"$rom_fp"/patch-"$rom_fp"-adv.log
 }
 
 function check_dex() {
 	read -p "* Do you want to disable pre-opt rom apps? (y/N) " dexa
 	if [[ "$dexa" == *"y"* ]]; then
+	    reportWarning "! Some roms, will not boot/built when pre-opt is disabled."
 		echo -e "
 WITH_DEXPREOPT := false 
 DISABLE_DEXPREOPT := true
@@ -605,12 +601,30 @@ LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
 	fi
 }
 
+function gen_mk() {
+    if [[ -n "$gen_mk" ]]; then
+		repo="${PWD}"
+		gen_lunch="${gen_mk}_${gen_target}"
+		[ "$localManifestBranch" != *"8"* ] && gen_mk="$gen_lunch" #need test
+		rm -rf "$gen_mk.mk"
+		cd device/phh/treble
+        cat <<EOF>> $gen_mk.mk
+`[ -n "$gen_config" ] && echo "$gen_config"`
+`[ -n "$gen_sepolicy" ] && echo "$gen_sepolicy"`
+`cat $target_name.mk`
+EOF
+        sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_lunch}@" -i $gen_mk.mk
+        sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_lunch}@" -i $gen_mk.mk
+		cd "$repo"
+	fi
+}
+
 function build_variant() {
     read -p "* Do you want to clean before starting build? (y/N) " choicer
     if [[ $choicer == *"y"* ]];then
     	make installclean
     fi
-    [[ -n "$gen_lunch" ]] && lunch "$gen_lunch" || lunch "$1"
+    [[ -n "$gen_lunch" ]] && lunch "$gen_lunch"-userdebug || lunch "$1" #need test
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
     make $extra_make_options BUILD_NUMBER="$rom_fp" vndk-test-sepolicy
     [ -f "$OUT"/system.img ] && {
@@ -625,7 +639,7 @@ function build_variant() {
     		if [[ $up == *"y"* ]]; then
 			gdrive upload --share $rom_type-$target_name-adv.zip || echo "Please, install gdrive tool!"
     		fi
-    } || echo -e "\nBUILD ERROR ! \n"
+    } || reportError "BUILD HAS FAILED !"
 }
 
 function jack_env() {
@@ -643,36 +657,40 @@ function jack_env() {
 
 prepre_env
 
-if [[ $1 == "-j" ]]; then
+if [[ "$1" == "-j" ]]; then
 	re='^[0-9]+$'
-	if [[ $2 =~ $re ]] ; then
+	if [[ "$2" =~ "$re" ]] ; then
 		jobs="$2"
 		rom_type="$3"
 		targets="$(($#-3))"
-		start='3'
+		start=3
 	else
-		echo -e "\nNot a jobs number: $2\n" ; help ; exit 1
+		reportError "Not a jobs number: $([ -z $2 ] && echo \(null\) || echo $2)"
 	fi
 else
 	rom_type="$1"
 	targets="$(($#-1))"
-	start='1'
+	start=1
+fi
+
+if [[ "$1" == "--help" ]]; then
+	>&2 help
+	exit 1
 fi
 
 get_rom_type "$rom_type"
 
 count=0
 while [[ "$count" != "$targets" ]]; do
-	count="$(($count+1))"
-	variant="$(($count+$start))"
-	get_variants "${!variant}"
+	count="$((count+1))"
+	variant="$((count+start))"
+	bvariant="$((variant-1))"
+	[ "${!variant}" != "${!bvariant}" ] && get_variants "${!variant}"
 done
 
+[[ -z "$variant" ]] && reportError "Invalid defined variant: (null)"
 
-if [[ -z "$mainrepo" || ${#variant_codes[*]} -eq 0 || "$1" == "--help" ]]; then
-	>&2 help
-	exit 1
-else
+if [[ -n "$mainrepo" && ! ("${#variant_codes[*]}" -eq 0) ]]; then
 	say_welcome
 fi
 
@@ -684,8 +702,6 @@ if [[ "$python" == *"3."* ]]; then
 	. .venv/bin/activate
 fi
 
-init_release
-
 read -p "- Do you want to sync? (y/N) " choice
 if [[ "$choice" == *"y"* ]];then
 	read -p "* Do you want to clean before sync? (y/N) " choicec
@@ -695,15 +711,19 @@ if [[ "$choice" == *"y"* ]];then
 	init_main_repo
 	sync_repo
 	init_local_manifest
+	else
+	[ ! -d ".repo" ] && reportWarning "! ROM sources cannot be found. Unexpected errors can be."
 fi
 
 read -p "- Do you want to patch? (y/N) " choice2
 if [[ $choice2 == *"y"* ]];then
 	fix_missings
+	add_mks
+	init_release
 	patch_things
+	else
+	reportWarning "! Without patching, ROM will not work."
 fi
-
-add_mks
 
 read -p "- Do you want to start build now? (y/N) " choice3
 if [[ $choice3 == *"y"* ]];then
@@ -713,6 +733,10 @@ if [[ $choice3 == *"y"* ]];then
 	for (( idx=0; idx < ${#variant_codes[*]}; idx++ )); do
 		target_name=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
 		gen_mk
-		build_variant "${variant_codes[$idx]}" "${variant_names[$idx]}"
+		
+	    printText "Building process started for: ${variant_names[$idx]}"
+	    printText "Outputting in: release/$rom_fp"
+		
+	    build_variant "${variant_codes[$idx]}" "${variant_names[$idx]}"
 	done
 fi

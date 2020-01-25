@@ -92,8 +92,8 @@ function format_time() {
 # PRINTS A HELP MENU
 function help_menu() {
     echo -e "\n${BOLD}OVERVIEW:${RESTORE} Merges full GSI changes from phhusson into a ROM set of repos\n"
-    echo -e "${BOLD}USAGE:${RESTORE} bash apply_patches.sh <source_dir>\n"
-    echo -e "${BOLD}EXAMPLE:${RESTORE} bash apply_patches.sh ~/Android/Lineage\n"
+    echo -e "${BOLD}USAGE:${RESTORE} bash apply_patches.sh <source_dir> <branch_name>\n"
+    echo -e "${BOLD}EXAMPLE:${RESTORE} bash apply_patches.sh ~/Android/Lineage android-10.0-r14\n"
     echo -e "${BOLD}Required options:${RESTORE}"
     echo -e "       source_dir: Location of the ROM tree; this needs to exist for the script to properly proceed\n"
     echo -e "       branch_name: what commits need be pulled. Oreo or pie? \n"
