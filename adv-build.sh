@@ -17,13 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses
 #
 
+set -e -E
+trap 'reportError "An unexpected error occurred!"' ERR
+
 ###############
 #             #
 #  VARIABLES  #
 #             #
 ###############
 
-set -e
 myname="$(basename "$0")"
 BLD="\033[1m"
 GRN="\033[01;32m"
@@ -53,6 +55,7 @@ function reportError() {
     echo -e ""
     echo -e ${GRN}"Run \"bash $myname --help\" for usage information."${RST} 
     echo -e ""
+    trap - ERR
     exit 1
 }
 
@@ -68,6 +71,7 @@ sleep 0.8s
 }
 
 function prepre_env() {
+set -e
 if [ -z "$USER" ];then
 	export USER="$(id -un)"
 fi
@@ -461,18 +465,19 @@ function get_rom_type() {
         esac
 }
 
-declare -A partition_layout_map
-partition_layout_map[aonly]=a
-partition_layout_map[ab]=b
-
-declare -A gapps_selection_map
-gapps_selection_map[vanilla]=v
-gapps_selection_map[gapps]=g
-
-declare -A su_selection_map
-su_selection_map[su]=S
-su_selection_map[nosu]=N
 function parse_variant() {
+    local -A partition_layout_map
+    partition_layout_map[aonly]=a
+    partition_layout_map[ab]=b
+
+    local -A gapps_selection_map
+    gapps_selection_map[vanilla]=v
+    gapps_selection_map[gapps]=g
+
+    local -A su_selection_map
+    su_selection_map[su]=S
+    su_selection_map[nosu]=N
+    
     local -a pieces
     IFS=- pieces=( $1 )
 
@@ -482,7 +487,6 @@ function parse_variant() {
     local su_selection=${su_selection_map[${pieces[3]}]}
     local build_type_selection=${pieces[4]}
     
-    
     if [[ -z "$processor_type" || -z "$partition_layout" || -z "$gapps_selection" || -z "$su_selection" ]]; then
        >&2 reportError "Invalid defined variant: $1"
     fi
@@ -490,9 +494,10 @@ function parse_variant() {
     echo "treble_${processor_type}_${partition_layout}${gapps_selection}${su_selection}-${build_type_selection}"
 }
 
-declare -a variant_codes
-declare -a variant_names
 function get_variants() {
+        declare -a -g variant_codes
+        declare -a -g variant_names
+        
         case "$1" in
             *-*-*-*-*)
                 variant_codes[${#variant_codes[*]}]=$(parse_variant "$1")
@@ -520,7 +525,7 @@ function force_clone() {
 	local repo="$2"
 	
 	[ -d "$dir" ] && rm -rf "$dir"
-	git clone https://github.com/phhusson/"$repo" "$dir" -b "$( ([ -z $3 ] && echo $localManifestBranch) || echo $3)"
+	git clone https://github.com/phhusson/"$repo" "$dir" -b "$( ([[ -z $3 ]] && echo $localManifestBranch) || echo $3)"
 }
 
 function g_clone() {
@@ -665,7 +670,7 @@ if [[ "$1" == "-j" ]]; then
 		targets="$(($#-3))"
 		start=3
 	else
-		reportError "Not a jobs number: $([ -z $2 ] && echo \(null\) || echo $2)"
+		reportError "Not a jobs number: $([[ -z $2 ]] && echo \(null\) || echo $2)"
 	fi
 else
 	rom_type="$1"
