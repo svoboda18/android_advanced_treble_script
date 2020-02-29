@@ -213,6 +213,17 @@ function get_rom_type() {
 		treble_generate="aosip"
 		extra_make_options=""
             	;;
+            ces100)
+                mainrepo="https://github.com/CesiumOS/manifest"
+                mainbranch="ten"
+                localManifestBranch="android-10.0"
+                treble_generate=""
+		gen_mk="cesuim"
+		gen_target="treble"
+		gen_config='$(call inherit-product, vendor/aosp/config/common_full_phone.mk)'
+		gen_sepolicy=''
+                extra_make_options=""
+                ;;
 	    carbon81)
                 mainrepo="https://github.com/CarbonROM/android.git"
                 mainbranch="cr-6.1"
@@ -587,7 +598,7 @@ function patch_things() {
 	git clean -fdx
 	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
 	cd ../../..
-	bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch" | tee -a release/"$rom_fp"/patch-"$rom_fp"-adv.log
+	#bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch" | tee -a release/"$rom_fp"/patch-"$rom_fp"-adv.log
 }
 
 function check_dex() {
@@ -620,6 +631,7 @@ function gen_mk() {
 EOF
         sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_lunch}@" -i $gen_mk.mk
         sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_lunch}@" -i $gen_mk.mk
+        sed "s@${target_name}@${gen_lunch}@" -i AndroidProducts.mk
 		cd "$repo"
 	fi
 }
@@ -736,12 +748,10 @@ if [[ $choice3 == *"y"* ]];then
 	jack_env
         source build/envsetup.sh 2>&1
 	for (( idx=0; idx < ${#variant_codes[*]}; idx++ )); do
-		target_name=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
-		gen_mk
-		
+	    target_name=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
+	    gen_mk	
 	    printText "Building process started for: ${variant_names[$idx]}"
 	    printText "Outputting in: release/$rom_fp"
-		
 	    build_variant "${variant_codes[$idx]}" "${variant_names[$idx]}"
 	done
 fi

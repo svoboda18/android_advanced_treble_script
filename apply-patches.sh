@@ -150,11 +150,13 @@ while [[ $# -ge 2 ]]; do
                 reportError "This is not a valid Android source folder as there is no .repo folder!" && exit
             fi ;;
     esac
+
+    # variants
+    PIE=false
+    Q=false
     
     case "$2" in
         android-8.1)
-	    PIE=false
-	    Q=false
             BRANCH=android-8.1.0_r65-phh
 SUBS_REPOS="
 build
@@ -171,7 +173,7 @@ system/vold"
 ;;
         android-9.0)
             PIE=true
-            BRANCH=android-9.0.0_r52-r47-phh
+            BRANCH=android-9.0.0_r47-phh
 SUBS_REPOS="
 build
 external/selinux
@@ -190,7 +192,7 @@ system/vold"
 ;;
     android-10.0)
        Q=true
-       BRANCH=android-10.0.0_r25-phh
+       BRANCH=android-10.0.0_r29-phh
 SUBS_REPOS="
 bionic
 bootable/recovery
@@ -260,8 +262,8 @@ for FOLDER in ${SUBS_REPOS}; do
 
     # PICK THE COMMITS IF EVERYTHING CHECKS OUT
       [ ${FOLDER} = "system/vold" ] && {
-        $PIE && git cherry-pick --allow-empty-message --keep-redundant-commits --strategy-option thiers e5bca7db7223db865e5a2fe2549f881df032a877^..${FIRST_HASH} || $Q && git cherry-pick --allow-empty-message --keep-redundant-commits --strategy-option thiers 8cda1f026e9831d99794ca330ff58da21f973325^..${FIRST_HASH}
-      } || git cherry-pick --allow-empty-message --keep-redundant-commits --strategy-option thiers ${SECOND_HASH}^..${FIRST_HASH}
+        $PIE && git cherry-pick --allow-empty-message --keep-redundant-commits -X 13a34a80c433dd2a5a2c195b3c568990ef9908fd^..${FIRST_HASH}^..${FIRST_HASH} || $Q && git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers 979b8f32401ca344283337b23438c19199d9bfd7^..${FIRST_HASH}
+      } || git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers ${SECOND_HASH}^..${FIRST_HASH}
     
     # ADD TO RESULT STRING
     if [[ $? -ne 0 ]]; then
