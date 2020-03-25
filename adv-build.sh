@@ -550,12 +550,11 @@ function g_clone() {
 function init_local_manifest() {
 	force_clone device/phh/treble device_phh_treble
         force_clone vendor/vndk vendor_vndk master
+		force_clone vendor/hardware_overlay vendor_hardware_overlay pie
 	if [[ "$localManifestBranch" != *"8"* ]]; then
 		force_clone vendor/interfaces vendor_interfaces pie
-		force_clone vendor/hardware_overlay vendor_hardware_overlay pie
 	else
-        	force_clone vendor/interfaces vendor_interfaces master
-		force_clone vendor/hardware_overlay vendor_hardware_overlay master
+        force_clone vendor/interfaces vendor_interfaces master
 	fi
 	force_clone vendor/vndk-tests vendor_vndk-tests master
 	
@@ -569,7 +568,7 @@ function init_local_manifest() {
 }
 
 function sync_repo() {
-        repo sync -c -j"$jobs" --force-broken --no-clone-bundle --no-tags
+    repo sync -c -j"$jobs" --no-clone-bundle --no-tags
 }
 
 function clean_repo_folder() {
@@ -589,16 +588,18 @@ function fix_missings() {
 	mkdir -p device/sample/etc
 	wget --output-document=device/sample/etc/apns-full-conf.xml https://github.com/LineageOS/android_vendor_lineage/raw/lineage-17.0/prebuilt/common/etc/apns-conf.xml 2>/dev/null
 
+	mkdir -p device/generic/common/nfc
+	wget --output-document=device/generic/common/nfc/libnfc-nci.conf https://android.googlesource.com/device/generic/common/+/master/nfc/libnfc-nci.conf?format=TEXT 2>/dev/null
 }
 
 function patch_things() {
    	repodir="${PWD}"
-    	rm -f device/*/sepolicy/common/private/genfs_contexts
+    rm -f device/*/sepolicy/common/private/genfs_contexts
 	cd device/phh/treble
 	git clean -fdx
 	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
 	cd ../../..
-	#bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch" | tee -a release/"$rom_fp"/patch-"$rom_fp"-adv.log
+	bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch" | tee -a release/"$rom_fp"/patch-"$rom_fp"-adv.log
 }
 
 function check_dex() {
@@ -621,10 +622,10 @@ function gen_mk() {
     if [[ -n "$gen_mk" ]]; then
 		repo="${PWD}"
 		gen_lunch="${gen_mk}_${gen_target}"
-		[ "$localManifestBranch" != *"8"* ] && gen_mk="$gen_lunch" #need test
+		[ "$localManifestBranch" != *"8"* ] && gen_mk="$gen_lunch"
 		rm -rf "$gen_mk.mk"
 		cd device/phh/treble
-        cat <<EOF>> $gen_mk.mk
+        cat << EOF >> $gen_mk.mk
 `[ -n "$gen_config" ] && echo "$gen_config"`
 `[ -n "$gen_sepolicy" ] && echo "$gen_sepolicy"`
 `cat $target_name.mk`
@@ -641,9 +642,11 @@ function build_variant() {
     if [[ $choicer == *"y"* ]];then
     	make installclean
     fi
-    [[ -n "$gen_lunch" ]] && lunch "$gen_lunch"-userdebug || lunch "$1" #need test
+    [[ -n "$gen_lunch" ]] && lunch "$gen_lunch"-userdebug || lunch "$1"
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
     make $extra_make_options BUILD_NUMBER="$rom_fp" vndk-test-sepolicy
+	make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
+	
     [ -f "$OUT"/system.img ] && {
     	echo -e "* ROM built sucessfully (release/$rom_fp)"
     	cp "$OUT"/system.img release/"$rom_fp"/$rom_type-system-"$2".img 
@@ -654,15 +657,15 @@ function build_variant() {
 	    	fi
     	read -p "* Do you want to upload the built gsi? (y/N) " up
     		if [[ $up == *"y"* ]]; then
-			gdrive upload --share $rom_type-$target_name-adv.zip || echo "Please, install gdrive tool!"
+				gdrive upload --share $rom_type-$target_name-adv.zip || echo "Please, install gdrive tool!"
     		fi
     } || reportError "BUILD HAS FAILED !"
 }
 
 function jack_env() {
-    RAM=$(free | awk '/^Mem:/{ printf("%0.f", $2/(1024^2))}') #calculating how much RAM (wow, such ram)
-    if [[ "$RAM" -lt 16 ]];then #if we're poor guys with less than 16gb
-	export JACK_SERVER_VM_ARGUMENTS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx"$((RAM -1))"G"
+    RAM=$(free | awk '/^Mem:/{ printf("%0.f", $2/(1024^2))}')
+    if [[ "$RAM" -lt 16 ]]; then
+		export JACK_SERVER_VM_ARGUMENTS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx"$(($RAM-1))"G"
     fi
 }
 
@@ -691,7 +694,7 @@ else
 fi
 
 if [[ "$1" == "--help" ]]; then
-	>&2 help
+	help
 	exit 1
 fi
 
@@ -720,9 +723,9 @@ if [[ "$python" == *"3."* ]]; then
 fi
 
 read -p "- Do you want to sync? (y/N) " choice
-if [[ "$choice" == *"y"* ]];then
+if [[ "$choice" == *"y"* ]]; then
 	read -p "* Do you want to clean before sync? (y/N) " choicec
-	if [[ $choicec == *"y"* ]];then
+	if [[ $choicec == *"y"* ]]; then
 		clean_repo_folder
 	fi
 	init_main_repo
@@ -733,25 +736,24 @@ if [[ "$choice" == *"y"* ]];then
 fi
 
 read -p "- Do you want to patch? (y/N) " choice2
-if [[ $choice2 == *"y"* ]];then
+if [[ $choice2 == *"y"* ]]; then
 	fix_missings
 	add_mks
-	init_release
 	patch_things
 	else
 	reportWarning "! Without patching, ROM will not work."
 fi
 
 read -p "- Do you want to start build now? (y/N) " choice3
-if [[ $choice3 == *"y"* ]];then
+if [[ $choice3 == *"y"* ]]; then
 	check_dex
 	jack_env
-        source build/envsetup.sh 2>&1
+	init_release
+	source build/envsetup.sh 2>&1
 	for (( idx=0; idx < ${#variant_codes[*]}; idx++ )); do
 	    target_name=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
 	    gen_mk	
-	    printText "Building process started for: ${variant_names[$idx]}"
-	    printText "Outputting in: release/$rom_fp"
+	    printText "Building process started ($idx/${#variant_codes[*]})"
 	    build_variant "${variant_codes[$idx]}" "${variant_names[$idx]}"
 	done
 fi

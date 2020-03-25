@@ -192,7 +192,7 @@ system/vold"
 ;;
     android-10.0)
        Q=true
-       BRANCH=android-10.0.0_r29-phh
+       BRANCH=android-10.0.0_r31-phh
 SUBS_REPOS="
 bionic
 bootable/recovery
@@ -261,8 +261,8 @@ for FOLDER in ${SUBS_REPOS}; do
     git reset --hard HEAD
 
     # PICK THE COMMITS IF EVERYTHING CHECKS OUT
-      [ ${FOLDER} = "system/vold" ] && {
-        $PIE && git cherry-pick --allow-empty-message --keep-redundant-commits -X 13a34a80c433dd2a5a2c195b3c568990ef9908fd^..${FIRST_HASH}^..${FIRST_HASH} || $Q && git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers 979b8f32401ca344283337b23438c19199d9bfd7^..${FIRST_HASH}
+    [ ${FOLDER} = "system/vold" ] && {
+	    ($PIE && git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers 13a34a80c433dd2a5a2c195b3c568990ef9908fd^..${FIRST_HASH}) || $Q && git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers 979b8f32401ca344283337b23438c19199d9bfd7^..${FIRST_HASH}
       } || git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers ${SECOND_HASH}^..${FIRST_HASH}
     
     # ADD TO RESULT STRING
