@@ -654,11 +654,11 @@ function build_variant() {
 
     	read -p "* Do you want to compress the built gsi? (y/N) " zipch
     		if [[ $zipch == *"y"* ]]; then
-    			cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-"$rom_fp"-adv.zip $rom_type-*.img 2>/dev/null
+    			cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-"$rom_fp".zip $rom_type-*.img 2>/dev/null
 	    	fi
     	read -p "* Do you want to upload the built gsi? (y/N) " up
     		if [[ $up == *"y"* ]]; then
-			gdrive upload --share $rom_type-$target_name-"$rom_fp"adv.zip || echo "Please, install gdrive tool!"
+			gdrive upload --share $rom_type-$target_name-"$rom_fp".zip || echo "Please, install gdrive tool!"
     		fi
     } || reportError "BUILD HAS FAILED !"
 }
