@@ -32,7 +32,7 @@ GRN="\033[01;32m"
 RED="\033[01;31m"
 YLW="\033[01;33m"
 RST="\033[0m"
-VER='1.5' 
+VER=1.5
 
 ###############
 #             #
@@ -41,11 +41,11 @@ VER='1.5'
 ###############
 
 function printText() {
-    echo -e "${GRN}===$( for i in $( seq ${#1} ); do echo -e "=\c"; done )==="
-    echo -e "=  $( for i in $( seq ${#1} ); do echo -e " \c"; done )  ="
-    echo -e "=  ${RST}${1}${GRN}  ="
-    echo -e "=  $( for i in $( seq ${#1} ); do echo -e " \c"; done )  ="
-    echo -e "===$( for i in $( seq ${#1} ); do echo -e "=\c"; done )==="
+    echo -e "${GRN}==$( for i in $( seq ${#1} ); do echo -e "=\c"; done )=="
+    echo -e "= $( for i in $( seq ${#1} ); do echo -e " \c"; done ) ="
+    echo -e "= ${RST}${1}${GRN} ="
+    echo -e "= $( for i in $( seq ${#1} ); do echo -e " \c"; done ) ="
+    echo -e "==$( for i in $( seq ${#1} ); do echo -e "=\c"; done )=="
     echo -e ${RST}
 }
 
@@ -222,7 +222,7 @@ function get_rom_type() {
 		gen_target="treble"
 		gen_config='$(call inherit-product, vendor/aosp/config/common_full_phone.mk)'
 		gen_sepolicy=''
-                extra_make_options=""
+                extra_make_options="WITHOUT_CHECK_API=true"
                 ;;
 	    carbon81)
                 mainrepo="https://github.com/CarbonROM/android.git"
@@ -524,7 +524,7 @@ function get_variants() {
 }
 
 function init_release() {
-	mkdir -p release/"$rom_fp"
+	[ ! -d release/"$rom_fp" ] && mkdir -p release/"$rom_fp"
 }
 
 function init_main_repo() {
@@ -540,17 +540,18 @@ function force_clone() {
 }
 
 function g_clone() {
-   local dir="$2"
-   local repo="$1"
-   
-   [ -d "$dir" ] && rm -rf "$dir"
-   git clone --depth=1 "$repo" "$dir"
+	local dir="$2"
+	local repo="$1"
+
+	[ -d "$dir" ] && rm -rf "$dir"
+	git clone --depth=1 "$repo" "$dir"
 }
 
 function init_local_manifest() {
 	force_clone device/phh/treble device_phh_treble
         force_clone vendor/vndk vendor_vndk master
-		force_clone vendor/hardware_overlay vendor_hardware_overlay pie
+	force_clone vendor/hardware_overlay vendor_hardware_overlay pie
+
 	if [[ "$localManifestBranch" != *"8"* ]]; then
 		force_clone vendor/interfaces vendor_interfaces pie
 	else
@@ -568,7 +569,7 @@ function init_local_manifest() {
 }
 
 function sync_repo() {
-    repo sync -c -j"$jobs" --no-clone-bundle --no-tags
+	repo sync -c -j"$jobs" --no-clone-bundle --no-tags
 }
 
 function clean_repo_folder() {
@@ -594,7 +595,7 @@ function fix_missings() {
 
 function patch_things() {
    	repodir="${PWD}"
-    rm -f device/*/sepolicy/common/private/genfs_contexts
+        rm -f device/*/sepolicy/common/private/genfs_contexts
 	cd device/phh/treble
 	git clean -fdx
 	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
@@ -605,7 +606,7 @@ function patch_things() {
 function check_dex() {
 	read -p "* Do you want to disable pre-opt rom apps? (y/N) " dexa
 	if [[ "$dexa" == *"y"* ]]; then
-	    reportWarning "! Some roms, will not boot/built when pre-opt is disabled."
+	        reportWarning "! Some roms, will not boot/built when pre-opt is disabled."
 		echo -e "
 WITH_DEXPREOPT := false 
 DISABLE_DEXPREOPT := true
@@ -620,11 +621,11 @@ LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
 
 function gen_mk() {
     if [[ -n "$gen_mk" ]]; then
-		repo="${PWD}"
-		gen_lunch="${gen_mk}_${gen_target}"
-		[ "$localManifestBranch" != *"8"* ] && gen_mk="$gen_lunch"
-		rm -rf "$gen_mk.mk"
-		cd device/phh/treble
+	repo="${PWD}"
+	gen_lunch="${gen_mk}_${gen_target}"
+	[ "$localManifestBranch" != *"8"* ] && gen_mk="$gen_lunch"
+	cd device/phh/treble
+	rm -rf "$gen_mk.mk"
         cat << EOF >> $gen_mk.mk
 `[ -n "$gen_config" ] && echo "$gen_config"`
 `[ -n "$gen_sepolicy" ] && echo "$gen_sepolicy"`
@@ -633,19 +634,19 @@ EOF
         sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_lunch}@" -i $gen_mk.mk
         sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_lunch}@" -i $gen_mk.mk
         sed "s@${target_name}@${gen_lunch}@" -i AndroidProducts.mk
-		cd "$repo"
+	cd "$repo"
 	fi
 }
 
 function build_variant() {
     read -p "* Do you want to clean before starting build? (y/N) " choicer
     if [[ $choicer == *"y"* ]];then
-    	make installclean
+	    make installclean
     fi
     [[ -n "$gen_lunch" ]] && lunch "$gen_lunch"-userdebug || lunch "$1"
     make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
     make $extra_make_options BUILD_NUMBER="$rom_fp" vndk-test-sepolicy
-	make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
+    make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
 	
     [ -f "$OUT"/system.img ] && {
     	echo -e "* ROM built sucessfully (release/$rom_fp)"
@@ -653,11 +654,11 @@ function build_variant() {
 
     	read -p "* Do you want to compress the built gsi? (y/N) " zipch
     		if [[ $zipch == *"y"* ]]; then
-    			cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-adv.zip $rom_type-*.img 2>/dev/null
+    			cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-"$rom_fp"-adv.zip $rom_type-*.img 2>/dev/null
 	    	fi
     	read -p "* Do you want to upload the built gsi? (y/N) " up
     		if [[ $up == *"y"* ]]; then
-				gdrive upload --share $rom_type-$target_name-adv.zip || echo "Please, install gdrive tool!"
+			gdrive upload --share $rom_type-$target_name-"$rom_fp"adv.zip || echo "Please, install gdrive tool!"
     		fi
     } || reportError "BUILD HAS FAILED !"
 }
@@ -665,7 +666,7 @@ function build_variant() {
 function jack_env() {
     RAM=$(free | awk '/^Mem:/{ printf("%0.f", $2/(1024^2))}')
     if [[ "$RAM" -lt 16 ]]; then
-		export JACK_SERVER_VM_ARGUMENTS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx"$(($RAM-1))"G"
+	    export JACK_SERVER_VM_ARGUMENTS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx$(($RAM-1))G"
     fi
 }
 
@@ -729,9 +730,10 @@ if [[ "$choice" == *"y"* ]]; then
 		clean_repo_folder
 	fi
 	init_main_repo
+	init_release
 	sync_repo
 	init_local_manifest
-	else
+else
 	[ ! -d ".repo" ] && reportWarning "! ROM sources cannot be found. Unexpected errors can be."
 fi
 
@@ -740,7 +742,7 @@ if [[ $choice2 == *"y"* ]]; then
 	fix_missings
 	add_mks
 	patch_things
-	else
+else
 	reportWarning "! Without patching, ROM will not work."
 fi
 
@@ -753,7 +755,7 @@ if [[ $choice3 == *"y"* ]]; then
 	for (( idx=0; idx < ${#variant_codes[*]}; idx++ )); do
 	    target_name=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
 	    gen_mk	
-	    printText "Building process started ($idx/${#variant_codes[*]})"
+	    printText "Building process started ($((1+$idx))/${#variant_codes[*]})"
 	    build_variant "${variant_codes[$idx]}" "${variant_names[$idx]}"
 	done
 fi

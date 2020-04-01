@@ -261,10 +261,13 @@ for FOLDER in ${SUBS_REPOS}; do
     git reset --hard HEAD
 
     # PICK THE COMMITS IF EVERYTHING CHECKS OUT
-    [ ${FOLDER} = "system/vold" ] && {
-	    ($PIE && git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers 13a34a80c433dd2a5a2c195b3c568990ef9908fd^..${FIRST_HASH}) || $Q && git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers 979b8f32401ca344283337b23438c19199d9bfd7^..${FIRST_HASH}
-      } || git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers ${SECOND_HASH}^..${FIRST_HASH}
-    
+    if [[ ${FOLDER} = "system/vold" ]]; then
+	    ($PIE && git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers 13a34a80c433dd2a5a2c195b3c568990ef9908fd^..${FIRST_HASH})
+	    ($Q && git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers 037344ea364f21a80c55240f419ff11251a90c0e^..${FIRST_HASH})
+    else
+	    git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers ${SECOND_HASH}^..${FIRST_HASH}
+    fi
+
     # ADD TO RESULT STRING
     if [[ $? -ne 0 ]]; then
         RESULT_STRING+="${FOLDER}: ${RED}FAILED${RESTORE}\n"
