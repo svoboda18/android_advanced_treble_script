@@ -32,7 +32,7 @@ GRN="\033[01;32m"
 RED="\033[01;31m"
 YLW="\033[01;33m"
 RST="\033[0m"
-VER=1.5
+VER=2
 
 ###############
 #             #
@@ -41,26 +41,26 @@ VER=1.5
 ###############
 
 function printText() {
-    echo -e "${GRN}==$( for i in $( seq ${#1} ); do echo -e "=\c"; done )=="
-    echo -e "= $( for i in $( seq ${#1} ); do echo -e " \c"; done ) ="
-    echo -e "= ${RST}${1}${GRN} ="
-    echo -e "= $( for i in $( seq ${#1} ); do echo -e " \c"; done ) ="
-    echo -e "==$( for i in $( seq ${#1} ); do echo -e "=\c"; done )=="
-    echo -e ${RST}
+	echo -e "${GRN}==$( for i in $( seq ${#1} ); do echo -e "=\c"; done )=="
+	echo -e "= $( for i in $( seq ${#1} ); do echo -e " \c"; done ) ="
+	echo -e "= ${RST}${1}${GRN} ="
+	echo -e "= $( for i in $( seq ${#1} ); do echo -e " \c"; done ) ="
+	echo -e "==$( for i in $( seq ${#1} ); do echo -e "=\c"; done )=="
+	echo -e ${RST}
 }
 
 function reportError() {
-    echo -e ""
-    echo -e ${RED}"${1}"${RST} 
-    echo -e ""
-    echo -e ${GRN}"Run \"bash $myname --help\" for usage information."${RST} 
-    echo -e ""
-    trap - ERR
-    exit 1
+	echo -e ""
+	echo -e ${RED}"${1}"${RST} 
+	echo -e ""
+	echo -e ${GRN}"Run \"bash $myname --help\" for usage information."${RST} 
+	echo -e ""
+	trap - ERR
+	exit 1
 }
 
 function reportWarning() {
-    echo -e ${YLW}"${1}"${RST}
+	echo -e ${YLW}"${1}"${RST}
 }
 
 function say_welcome() {
@@ -108,6 +108,8 @@ ROM types:
   aosp81
   aosp90
   aosp100
+  aosp110
+  aosp121
   aospa81
   aospa90
   aosip81
@@ -170,357 +172,371 @@ EOF
 }
 
 function get_rom_type() {
-        case "$1" in
-            aosp81)
-                mainrepo="https://android.googlesource.com/platform/manifest.git"
-                mainbranch="android-8.1.0_r65"
-                localManifestBranch="android-8.1"
-                treble_generate=""
-                extra_make_options=""
-                ;;
-            aosp90)
-                mainrepo="https://android.googlesource.com/platform/manifest.git"
-                mainbranch="android-9.0.0_r52"
-                localManifestBranch="android-9.0"
-                treble_generate=""
-                extra_make_options=""
-                ;;
-            aosp100)
-                mainrepo="https://android.googlesource.com/platform/manifest.git"
-                mainbranch="android-10.0.0_r25"
-                localManifestBranch="android-10.0"
-                treble_generate=""
-                extra_make_options=""
-                ;;
-            evox90)
-                mainrepo="https://github.com/Evolution-X/platform_manifest.git"
-                mainbranch="pie"
-                localManifestBranch="android-9.0"
-                treble_generate=""
-                extra_make_options=""
-                ;;
-	    aosip81)
-		mainrepo="https://github.com/AOSiP/platform_manifest.git"
-		mainbranch="oreo-mr1"
-		localManifestBranch="android-8.1"
-		treble_generate="aosip"
-		extra_make_options=""
-		;;
-	    aosip90)
-		mainrepo="https://github.com/AOSiP/platform_manifest.git"
-		mainbranch="pie"
-		localManifestBranch="android-9.0"
-		treble_generate="aosip"
-		extra_make_options=""
-            	;;
-            ces100)
-                mainrepo="https://github.com/CesiumOS/manifest"
-                mainbranch="ten"
-                localManifestBranch="android-10.0"
-                treble_generate=""
-		gen_mk="cesuim"
-		gen_target="treble"
-		gen_config='$(call inherit-product, vendor/aosp/config/common_full_phone.mk)'
-		gen_sepolicy=''
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-	    carbon81)
-                mainrepo="https://github.com/CarbonROM/android.git"
-                mainbranch="cr-6.1"
-                localManifestBranch="android-8.1"
-                treble_generate="carbon"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-	    carbon90)
-		mainrepo="https://github.com/CarbonROM/android.git"
-		mainbranch="cr-7.0"
-		localManifestBranch="android-9.0"
-		treble_generate="carbon"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    e-oreo)
-		mainrepo="https://gitlab.e.foundation/e/os/android/"
-		mainbranch="v1-oreo"
-		localManifestBranch="android-8.1"
-		treble_generate="lineage"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-            e-pie)
-                mainrepo="https://gitlab.e.foundation/e/os/android/"
-                mainbranch="v1-pie"
-                localManifestBranch="android-9.0"
-                treble_generate="lineage"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-            lineage151)
-                mainrepo="https://github.com/LineageOS/android.git"
-                mainbranch="lineage-15.1"
-                localManifestBranch="android-8.1"
-                treble_generate="lineage"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-            lineage160)
-                mainrepo="https://github.com/LineageOS/android.git"
-                mainbranch="lineage-16.0"
-                localManifestBranch="android-9.0"
-                treble_generate="lineage"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-            rr81)
-                mainrepo="https://github.com/ResurrectionRemix/platform_manifest.git"
-                mainbranch="oreo"
-                localManifestBranch="android-8.1"
-                treble_generate="rr"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-	    rr90)
-		mainrepo="https://github.com/ResurrectionRemix/platform_manifest.git"
-		mainbranch="pie"
-		localManifestBranch="android-9.0"
-		treble_generate="rr"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    dot81)
-		mainrepo="https://github.com/DotOS/manifest.git"
-		mainbranch="dot-o"
-		localManifestBranch="android-8.1"
-		treble_generate=""
-		gen_mk="dot"
-		gen_target="treble"
-		gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
-		gen_sepolicy='$(call inherit-product, device/aosp/sepolicy/common/sepolicy.mk)'
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    dot90)
-		mainrepo="https://github.com/DotOS/manifest.git"
-		mainbranch="dot-p"
-		localManifestBranch="android-9.0"
-		treble_generate=""
-		gen_mk="dot"
-		gen_target="treble"
-		gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
-		gen_sepolicy=''
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    aospa81)
-		mainrepo="https://github.com/AOSPA/manifest.git"
-		mainbranch="oreo-mr1"
-		localManifestBranch="android-8.1"
-		treble_generate="aospa"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    aospa90)
-		mainrepo="https://github.com/AOSPA/manifest.git"
-		mainbranch="pie"
-		localManifestBranch="android-9.0"
-		treble_generate="aospa"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    du81)
-		mainrepo="https://github.com/DirtyUnicorns/android_manifest.git"
-		mainbranch="o8x"
-		localManifestBranch="android-8.1"
-		treble_generate="du"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    du90)
-		mainrepo="https://github.com/DirtyUnicorns/android_manifest.git"
-		mainbranch="p9x"
-		localManifestBranch="android-9.0"
-		treble_generate="du"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    bliss81)
-		mainrepo="https://github.com/BlissRoms/platform_manifest.git"
-		mainbranch="o8.1"
-		localManifestBranch="android-8.1"
-		treble_generate="bliss"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    bliss90)
-		mainrepo="https://github.com/BlissRoms/platform_manifest.git"
-		mainbranch="p9.0"
-		localManifestBranch="android-9.0"
-		treble_generate="bliss"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    xpe81)
-		mainrepo="https://github.com/TheXPerienceProject/Manifest.git"
-		mainbranch="xpe-12.1"
-		localManifestBranch="android-8.1"
-		treble_generate="xpe"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    xpe90)
-		mainrepo="https://github.com/TheXPerienceProject/Manifest.git"
-		mainbranch="xpe-13.0"
-		localManifestBranch="android-9.0"
-		treble_generate="xpe"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-            pixel81)
-                mainrepo="https://github.com/PixelExperience/manifest.git"
-                mainbranch="oreo-mr1"
-                localManifestBranch="android-8.1"
-                treble_generate="pixel"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-            pixel90)
-                mainrepo="https://github.com/PixelExperience-P/manifest.git"
-                mainbranch="pie"
-                localManifestBranch="android-9.0"
-                treble_generate="pixel"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-            crdroid81)
-                mainrepo="https://github.com/crdroidandroid/android.git"
-                mainbranch="8.1"
-                localManifestBranch="android-8.1"
-                treble_generate="lineage"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-	    crdroid90)
-		mainrepo="https://github.com/crdroidandroid/android.git"
-		mainbranch="9.0"
-		localManifestBranch="android-9.0"
-		treble_generate="lineage"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-            mokee81)
-                mainrepo="https://github.com/MoKee/android.git"
-                mainbranch="mko-mr1"
-                localManifestBranch="android-8.1"
-                treble_generate="mokee"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-	    mokee90)
-		mainrepo="https://github.com/MoKee/android.git"
-		mainbranch="mkp"
-		localManifestBranch="android-9.0"
-		treble_generate="mokee"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-            aicp81)
-                mainrepo="https://github.com/AICP/platform_manifest.git"
-                mainbranch="o8.1"
-                localManifestBranch="android-8.1"
-                treble_generate="aicp"
-                extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    aicp90)
-		mainrepo="https://github.com/AICP/platform_manifest.git"
-		mainbranch="p9.0"
-		localManifestBranch="android-9.0"
-		treble_generate="aicp"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-            aokp81)
-                mainrepo="https://github.com/AOKP/platform_manifest.git"
-                mainbranch="oreo"
-                localManifestBranch="android-8.1"
-                treble_generate="aokp"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-	    aokp90)
-		mainrepo="https://github.com/AOKP/platform_manifest.git"
-		mainbranch="9.0"
-		localManifestBranch="android-9.0"
-		treble_generate="aokp"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-            aex90)
-                mainrepo="https://github.com/AospExtended/manifest.git"
-                mainbranch="9.x"
-                localManifestBranch="android-9.0"
-                treble_generate="aex"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
- 	    aex81)
-                mainrepo="https://github.com/AospExtended/manifest.git"
-                mainbranch="8.1.x"
-                localManifestBranch="android-8.1"
-                treble_generate="aex"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-            slim81)
-                mainrepo="https://github.com/SlimRoms/platform_manifest.git"
-                mainbranch="or8.1"
-                localManifestBranch="android-8.1"
-                treble_generate="slim"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-	    slim90)
-		mainrepo="https://github.com/SlimRoms/platform_manifest.git"
-		mainbranch="9.0"
-		localManifestBranch="android-9.0"
-		treble_generate="slim"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    havoc81)
-		mainrepo="https://github.com/Havoc-OS/android_manifest.git"
-		mainbranch="oreo"
-		localManifestBranch="android-8.1"
-		treble_generate="havoc"
-		extra_make_options="WITHOUT_CHECK_API=true"
-		;;
-	    havoc90)
-                mainrepo="https://github.com/Havoc-OS/android_manifest.git"
-                mainbranch="pie"
-                localManifestBranch="android-9.0"
-                treble_generate="havoc"
-                extra_make_options="WITHOUT_CHECK_API=true"
-                ;;
-	    *)
-		reportError "Unknown ROM type: $([ -z $1 ] && echo \(null\) || echo $1)"
-		;;
-        esac
+	case "$1" in
+		aosp81)
+	            mainrepo="https://android.googlesource.com/platform/manifest.git"
+	            mainbranch="android-8.1.0_r65"
+	            localManifestBranch="android-8.1"
+	            treble_generate=""
+	            extra_make_options=""
+	            ;;
+	        aosp90)
+	            mainrepo="https://android.googlesource.com/platform/manifest.git"
+	            mainbranch="android-9.0.0_r53"
+	            localManifestBranch="android-9.0"
+	            treble_generate=""
+	            extra_make_options=""
+	            ;;
+	        aosp100)
+	            mainrepo="https://android.googlesource.com/platform/manifest.git"
+	            mainbranch="android-10.0.0_r41"
+	            localManifestBranch="android-10.0"
+	            treble_generate=""
+	            extra_make_options=""
+	            ;;
+	        aosp110)
+	            mainrepo="https://android.googlesource.com/platform/manifest.git"
+	            mainbranch="android-11.0.0_r48"
+	            localManifestBranch="android-11.0"
+	            treble_generate=""
+	            extra_make_options=""
+	            ;;
+	        aosp121)
+	            mainrepo="https://android.googlesource.com/platform/manifest.git"
+	            mainbranch="android-12.1.0_r11"
+	            localManifestBranch="android-12.1"
+	            treble_generate=""
+	            extra_make_options=""
+	            ;;
+		evox90)
+	            mainrepo="https://github.com/Evolution-X/platform_manifest.git"
+	            mainbranch="pie"
+	            localManifestBranch="android-9.0"
+	            treble_generate=""
+	            extra_make_options=""
+	            ;;
+		aosip81)
+		    mainrepo="https://github.com/AOSiP/platform_manifest.git"
+		    mainbranch="oreo-mr1"
+		    localManifestBranch="android-8.1"
+		    treble_generate="aosip"
+		    extra_make_options=""
+		    ;;
+		aosip90)
+		    mainrepo="https://github.com/AOSiP/platform_manifest.git"
+		    mainbranch="pie"
+		    localManifestBranch="android-9.0"
+		    treble_generate="aosip"
+		    extra_make_options=""
+	            ;;
+		ces100)
+	            mainrepo="https://github.com/CesiumOS/manifest"
+	            mainbranch="ten"
+	            localManifestBranch="android-10.0"
+	            treble_generate=""
+		    gen_mk="cesuim"
+		    gen_target="treble"
+		    gen_config='$(call inherit-product, vendor/aosp/config/common_full_phone.mk)'
+		    gen_sepolicy=''
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		carbon81)
+	            mainrepo="https://github.com/CarbonROM/android.git"
+	            mainbranch="cr-6.1"
+	            localManifestBranch="android-8.1"
+	            treble_generate="carbon"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		carbon90)
+		    mainrepo="https://github.com/CarbonROM/android.git"
+		    mainbranch="cr-7.0"
+		    localManifestBranch="android-9.0"
+		    treble_generate="carbon"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		e-oreo)
+		    mainrepo="https://gitlab.e.foundation/e/os/android/"
+		    mainbranch="v1-oreo"
+		    localManifestBranch="android-8.1"
+		    treble_generate="lineage"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+	        e-pie)
+	            mainrepo="https://gitlab.e.foundation/e/os/android/"
+	            mainbranch="v1-pie"
+	            localManifestBranch="android-9.0"
+	            treble_generate="lineage"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		lineage151)
+	            mainrepo="https://github.com/LineageOS/android.git"
+	            mainbranch="lineage-15.1"
+	            localManifestBranch="android-8.1"
+	            treble_generate="lineage"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		lineage160)
+	            mainrepo="https://github.com/LineageOS/android.git"
+	            mainbranch="lineage-16.0"
+	            localManifestBranch="android-9.0"
+	            treble_generate="lineage"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		rr81)
+	            mainrepo="https://github.com/ResurrectionRemix/platform_manifest.git"
+	            mainbranch="oreo"
+	            localManifestBranch="android-8.1"
+	            treble_generate="rr"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		rr90)
+		    mainrepo="https://github.com/ResurrectionRemix/platform_manifest.git"
+		    mainbranch="pie"
+		    localManifestBranch="android-9.0"
+		    treble_generate="rr"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		dot81)
+		    mainrepo="https://github.com/DotOS/manifest.git"
+		    mainbranch="dot-o"
+		    localManifestBranch="android-8.1"
+		    treble_generate=""
+		    gen_mk="dot"
+		    gen_target="treble"
+		    gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
+		    gen_sepolicy='$(call inherit-product, device/aosp/sepolicy/common/sepolicy.mk)'
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		dot90)
+		    mainrepo="https://github.com/DotOS/manifest.git"
+		    mainbranch="dot-p"
+		    localManifestBranch="android-9.0"
+		    treble_generate=""
+		    gen_mk="dot"
+		    gen_target="treble"
+		    gen_config='$(call inherit-product, vendor/dot/config/common.mk)'
+		    gen_sepolicy=''
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		aospa81)
+		    mainrepo="https://github.com/AOSPA/manifest.git"
+		    mainbranch="oreo-mr1"
+		    localManifestBranch="android-8.1"
+		    treble_generate="aospa"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		aospa90)
+		    mainrepo="https://github.com/AOSPA/manifest.git"
+		    mainbranch="pie"
+		    localManifestBranch="android-9.0"
+		    treble_generate="aospa"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		du81)
+		    mainrepo="https://github.com/DirtyUnicorns/android_manifest.git"
+		    mainbranch="o8x"
+		    localManifestBranch="android-8.1"
+		    treble_generate="du"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		du90)
+		    mainrepo="https://github.com/DirtyUnicorns/android_manifest.git"
+		    mainbranch="p9x"
+		    localManifestBranch="android-9.0"
+		    treble_generate="du"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		bliss81)
+		    mainrepo="https://github.com/BlissRoms/platform_manifest.git"
+		    mainbranch="o8.1"
+		    localManifestBranch="android-8.1"
+		    treble_generate="bliss"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		bliss90)
+		    mainrepo="https://github.com/BlissRoms/platform_manifest.git"
+		    mainbranch="p9.0"
+		    localManifestBranch="android-9.0"
+		    treble_generate="bliss"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		xpe81)
+		    mainrepo="https://github.com/TheXPerienceProject/Manifest.git"
+		    mainbranch="xpe-12.1"
+		    localManifestBranch="android-8.1"
+		    treble_generate="xpe"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		xpe90)
+		    mainrepo="https://github.com/TheXPerienceProject/Manifest.git"
+		    mainbranch="xpe-13.0"
+		    localManifestBranch="android-9.0"
+		    treble_generate="xpe"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		pixel81)
+	            mainrepo="https://github.com/PixelExperience/manifest.git"
+	            mainbranch="oreo-mr1"
+	            localManifestBranch="android-8.1"
+	            treble_generate="pixel"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		pixel90)
+	            mainrepo="https://github.com/PixelExperience-P/manifest.git"
+	            mainbranch="pie"
+	            localManifestBranch="android-9.0"
+	            treble_generate="pixel"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		crdroid81)
+	            mainrepo="https://github.com/crdroidandroid/android.git"
+	            mainbranch="8.1"
+	            localManifestBranch="android-8.1"
+	            treble_generate="lineage"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		crdroid90)
+		    mainrepo="https://github.com/crdroidandroid/android.git"
+		    mainbranch="9.0"
+		    localManifestBranch="android-9.0"
+		    treble_generate="lineage"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		mokee81)
+	            mainrepo="https://github.com/MoKee/android.git"
+	            mainbranch="mko-mr1"
+	            localManifestBranch="android-8.1"
+	            treble_generate="mokee"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		mokee90)
+		    mainrepo="https://github.com/MoKee/android.git"
+		    mainbranch="mkp"
+		    localManifestBranch="android-9.0"
+		    treble_generate="mokee"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		aicp81)
+	            mainrepo="https://github.com/AICP/platform_manifest.git"
+	            mainbranch="o8.1"
+	            localManifestBranch="android-8.1"
+	            treble_generate="aicp"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		aicp90)
+		    mainrepo="https://github.com/AICP/platform_manifest.git"
+		    mainbranch="p9.0"
+		    localManifestBranch="android-9.0"
+		    treble_generate="aicp"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		aokp81)
+	            mainrepo="https://github.com/AOKP/platform_manifest.git"
+	            mainbranch="oreo"
+	            localManifestBranch="android-8.1"
+	            treble_generate="aokp"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		aokp90)
+		    mainrepo="https://github.com/AOKP/platform_manifest.git"
+		    mainbranch="9.0"
+		    localManifestBranch="android-9.0"
+		    treble_generate="aokp"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		aex90)
+	            mainrepo="https://github.com/AospExtended/manifest.git"
+	            mainbranch="9.x"
+	            localManifestBranch="android-9.0"
+	            treble_generate="aex"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		aex81)
+	            mainrepo="https://github.com/AospExtended/manifest.git"
+	            mainbranch="8.1.x"
+	            localManifestBranch="android-8.1"
+	            treble_generate="aex"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		slim81)
+	            mainrepo="https://github.com/SlimRoms/platform_manifest.git"
+	            mainbranch="or8.1"
+	            localManifestBranch="android-8.1"
+	            treble_generate="slim"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		slim90)
+		    mainrepo="https://github.com/SlimRoms/platform_manifest.git"
+		    mainbranch="9.0"
+		    localManifestBranch="android-9.0"
+		    treble_generate="slim"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		    ;;
+		havoc81)
+		    mainrepo="https://github.com/Havoc-OS/android_manifest.git"
+		    mainbranch="oreo"
+		    localManifestBranch="android-8.1"
+		    treble_generate="havoc"
+		    extra_make_options="WITHOUT_CHECK_API=true"
+		   ;;
+		havoc90)
+	            mainrepo="https://github.com/Havoc-OS/android_manifest.git"
+	            mainbranch="pie"
+	            localManifestBranch="android-9.0"
+	            treble_generate="havoc"
+	            extra_make_options="WITHOUT_CHECK_API=true"
+	            ;;
+		*)
+		    reportError "Unknown ROM type: $([ -z $1 ] && echo \(null\) || echo $1)"
+		    ;;
+	    esac
 }
 
 function parse_variant() {
-    local -A partition_layout_map
-    partition_layout_map[aonly]=a
-    partition_layout_map[ab]=b
+	local -A partition_layout_map
+	partition_layout_map[aonly]=a
+	partition_layout_map[ab]=b
 
-    local -A gapps_selection_map
-    gapps_selection_map[vanilla]=v
-    gapps_selection_map[gapps]=g
+	local -A gapps_selection_map
+	gapps_selection_map[vanilla]=v
+	gapps_selection_map[gapps]=g
 
-    local -A su_selection_map
-    su_selection_map[su]=S
-    su_selection_map[nosu]=N
-    
-    local -a pieces
-    IFS=- pieces=( $1 )
+	local -A su_selection_map
+	su_selection_map[su]=S
+	su_selection_map[nosu]=N
+	
+	local -a pieces
+	IFS=- pieces=( $1 )
 
-    local processor_type=${pieces[0]}
-    local partition_layout=${partition_layout_map[${pieces[1]}]}
-    local gapps_selection=${gapps_selection_map[${pieces[2]}]}
-    local su_selection=${su_selection_map[${pieces[3]}]}
-    local build_type_selection=${pieces[4]}
-    
-    if [[ -z "$processor_type" || -z "$partition_layout" || -z "$gapps_selection" || -z "$su_selection" ]]; then
-       >&2 reportError "Invalid defined variant: $1"
-    fi
+	local processor_type=${pieces[0]}
+	local partition_layout=${partition_layout_map[${pieces[1]}]}
+	local gapps_selection=${gapps_selection_map[${pieces[2]}]}
+	local su_selection=${su_selection_map[${pieces[3]}]}
+	local build_type_selection=${pieces[4]}
+	
+	if [[ -z "$processor_type" || -z "$partition_layout" || -z "$gapps_selection" || -z "$su_selection" ]]; then
+	   >&2 reportError "Invalid defined variant: $1"
+	fi
 
-    echo "treble_${processor_type}_${partition_layout}${gapps_selection}${su_selection}-${build_type_selection}"
+	echo "treble_${processor_type}_${partition_layout}${gapps_selection}${su_selection}-${build_type_selection}"
 }
 
 function get_variants() {
-        declare -a -g variant_codes
-        declare -a -g variant_names
-        
-        case "$1" in
-            *-*-*-*-*)
-                variant_codes[${#variant_codes[*]}]=$(parse_variant "$1")
-                variant_names[${#variant_names[*]}]="$1"
-                ;;
-            *-*-*-*)
-                variant_codes[${#variant_codes[*]}]=$(parse_variant "$1-userdebug")
-                variant_names[${#variant_names[*]}]="$1"
-                ;;
-            *) reportError "Invalid defined variant: $1"
-                ;;
-        esac
+	declare -a -g variant_codes
+	declare -a -g variant_names
+	    
+	case "$1" in
+	    *-*-*-*-*)
+		variant_codes[${#variant_codes[*]}]=$(parse_variant "$1")
+		variant_names[${#variant_names[*]}]="$1"
+	        ;;
+	    *-*-*-*)
+		variant_codes[${#variant_codes[*]}]=$(parse_variant "$1-userdebug")
+	        variant_names[${#variant_names[*]}]="$1"
+	        ;;
+	    *) reportError "Invalid defined variant: $1"
+	        ;;
+	esac
 }
 
 function init_release() {
@@ -540,31 +556,73 @@ function force_clone() {
 }
 
 function g_clone() {
+	local brn="$3"
 	local dir="$2"
 	local repo="$1"
-
+	local lfs=$( [[ "$(get_android_version)" -le 9 ]] && echo true || echo false )
+	
 	[ -d "$dir" ] && rm -rf "$dir"
-	git clone --depth=1 "$repo" "$dir"
+	git clone --depth=1 "$repo" "$dir" "$brn"
+	$lfs && (cd "$dir"; git lfs fetch && git lfs checkout)
 }
 
-function init_local_manifest() {
-	force_clone device/phh/treble device_phh_treble
-        force_clone vendor/vndk vendor_vndk master
-	force_clone vendor/hardware_overlay vendor_hardware_overlay pie
+function get_android_version() {
+	awk -F'[-.]' '{ print $2 }' <<< $localManifestBranch
+} 
 
-	if [[ "$localManifestBranch" != *"8"* ]]; then
-		force_clone vendor/interfaces vendor_interfaces pie
-	else
-        force_clone vendor/interfaces vendor_interfaces master
-	fi
-	force_clone vendor/vndk-tests vendor_vndk-tests master
+function init_local_manifest() {
+	local overlay_branch="master"
+	local interfaces_branch="master"
+	local device_branch="${localManifestBranch}"
+	local vndk_branch="master"
+	local magsik_branch="master"
+	local magisk_target=false
+	local vndk_target=true
+	local lptools_target=false
+	local android_version=$(get_android_version)
 	
+	if [[ "${android_version}" -ge 9 ]]; then
+	     overlay_branch="pie"
+	     interfaces_branch="pie"
+	     magsik_target=true
+	     if [[ "${android_version}" -eq 10 ]]; then
+	        vndk_branch="android-10.0"
+		magsik_branch="android-10.0"
+	     elif [[ "${android_version}" -ge 11 ]]; then
+	         # no vndk here
+	         vndk_target=false
+	         interfaces_branch="android-11.0"
+	         
+	         if [[ "${android_version}" -eq 12 ]]; then
+	            device_branch="android-12.0"
+		    lptools_target=true
+	         fi 
+	     fi
+	fi
+	force_clone device/phh/treble device_phh_treble ${device_branch}
+	$vndk_target && force_clone vendor/vndk vendor_vndk ${vndk_branch}
+	force_clone vendor/hardware_overlay vendor_hardware_overlay ${overlay_branch}
+
+	force_clone vendor/interfaces vendor_interfaces ${interfaces_branch}
+	force_clone vendor/vndk-tests vendor_vndk-tests master
+	$magisk_target && force_clone vendor/magsik vendor_magisk ${magisk_branch}
+	$lptools_target && force_clone vendor/lptools vendor_lptools master
 	read -p "- Do you want to sync gapps packages? (y/N) " g
-        if [[ $g == *"y"* ]];then
+	if [[ $g == *"y"* ]];then
+	    if [[ "${android_version}" -le 9 ]]; then
 		g_clone https://github.com/opengapps/aosp_build vendor/opengapps/build
 		g_clone https://gitlab.opengapps.org/opengapps/all vendor/opengapps/sources/all
 		g_clone https://gitlab.opengapps.org/opengapps/arm vendor/opengapps/sources/arm
 		g_clone https://gitlab.opengapps.org/opengapps/arm64 vendor/opengapps/sources/arm64
+	    elif [[ "${android_version}" -eq 10 ]]; then
+		g_clone https://gitlab.com/gms-mirror/gmsexpress vendor/google
+		rm -f vendor/gapps/interfaces/wifi_ext/Android.bp || true
+	    elif [[ "${android_version}" -eq 11 ]]; then
+		g_clone https://gitlab.com/00p513-dev/partner_gms vendor/partner_gms 11
+	    elif [[ "${android_version}" -eq 12 ]]; then
+		g_clone https://gitlab.com/davi.sh/gms-android-12 vendor/partner_gms
+		# add revision
+	    fi
 	fi
 }
 
@@ -581,8 +639,8 @@ function add_mks() {
 }
 
 function fix_missings() {
-	if [[ "$localManifestBranch" != *"8"* ]]; then
-		# fix kernel source missing (on pie/q)
+	if [[ "${android_version}" -gt 8 ]]; then
+		# fix kernel source missing
 		sed 's;.*KERNEL_;//&;' -i vendor/*/build/soong/Android.bp 2>/dev/null || true
 		rm -rf vendor/*/packages/overlays/NoCutout*
 	fi
@@ -594,13 +652,16 @@ function fix_missings() {
 }
 
 function patch_things() {
-   	repodir="${PWD}"
-        rm -f device/*/sepolicy/common/private/genfs_contexts
+	repodir="${PWD}"
+	rm -f device/*/sepolicy/common/private/genfs_contexts
+	if [ "${android_version}" -eq 12 ] && grep -q lottie packages/apps/Launcher3/Android.bp; then
+	    [ -d vendor/partner_gms ] && (cd vendor/partner_gms; wget --output-document=search.patch https://github.com/phhusson/treble_experimentations/raw/master/0001-Fix-SearchLauncher-for-Android-12.1.patch; git am search.patch || true)
+	fi
 	cd device/phh/treble
 	git clean -fdx
 	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
 	cd ../../..
-	bash "$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch" | tee -a release/"$rom_fp"/patch-"$rom_fp"-adv.log
+	. ./"$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch" | tee -a release/"$rom_fp"/patch-"$rom_fp".log || false
 }
 
 function check_dex() {
@@ -620,54 +681,53 @@ LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
 }
 
 function gen_mk() {
-    if [[ -n "$gen_mk" ]]; then
+	if [[ -n "$gen_mk" ]]; then
 	repo="${PWD}"
 	gen_lunch="${gen_mk}_${gen_target}"
 	[ "$localManifestBranch" != *"8"* ] && gen_mk="$gen_lunch"
 	cd device/phh/treble
 	rm -rf "$gen_mk.mk"
-        cat << EOF >> $gen_mk.mk
+	    cat << EOF >> $gen_mk.mk
 `[ -n "$gen_config" ] && echo "$gen_config"`
 `[ -n "$gen_sepolicy" ] && echo "$gen_sepolicy"`
 `cat $target_name.mk`
 EOF
-        sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_lunch}@" -i $gen_mk.mk
-        sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_lunch}@" -i $gen_mk.mk
-        sed "s@${target_name}@${gen_lunch}@" -i AndroidProducts.mk
+	    sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_lunch}@" -i $gen_mk.mk
+	    sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_lunch}@" -i $gen_mk.mk
+	    sed "s@${target_name}@${gen_lunch}@" -i AndroidProducts.mk
 	cd "$repo"
 	fi
 }
 
 function build_variant() {
-    read -p "* Do you want to clean before starting build? (y/N) " choicer
-    if [[ $choicer == *"y"* ]];then
+	read -p "* Do you want to clean before starting build? (y/N) " choicer
+	if [[ $choicer == *"y"* ]];then
 	    make installclean
-    fi
-    [[ -n "$gen_lunch" ]] && lunch "$gen_lunch"-userdebug || lunch "$1"
-    make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
-    make $extra_make_options BUILD_NUMBER="$rom_fp" vndk-test-sepolicy
-    make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
+	fi
+	[[ -n "$gen_lunch" ]] && lunch "$gen_lunch"-userdebug || lunch "$1"
+	make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
+	make $extra_make_options BUILD_NUMBER="$rom_fp" vndk-test-sepolicy
 	
-    [ -f "$OUT"/system.img ] && {
-    	echo -e "* ROM built sucessfully (release/$rom_fp)"
-    	cp "$OUT"/system.img release/"$rom_fp"/$rom_type-system-"$2".img 
+	[ -f "$OUT"/system.img ] && {
+		echo -e "* ROM built sucessfully (release/$rom_fp)"
+		cp "$OUT"/system.img release/"$rom_fp"/$rom_type-system-"$2".img 
 
-    	read -p "* Do you want to compress the built gsi? (y/N) " zipch
-    		if [[ $zipch == *"y"* ]]; then
-    			cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-"$rom_fp".zip $rom_type-*.img 2>/dev/null
+		read -p "* Do you want to compress the built gsi? (y/N) " zipch
+			if [[ $zipch == *"y"* ]]; then
+				cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-"$rom_fp".zip $rom_type-*.img 2>/dev/null
 	    	fi
-    	read -p "* Do you want to upload the built gsi? (y/N) " up
-    		if [[ $up == *"y"* ]]; then
+		read -p "* Do you want to upload the built gsi? (y/N) " up
+			if [[ $up == *"y"* ]]; then
 			gdrive upload --share $rom_type-$target_name-"$rom_fp".zip || echo "Please, install gdrive tool!"
-    		fi
-    } || reportError "BUILD HAS FAILED !"
+			fi
+	} || reportError "BUILD HAS FAILED !"
 }
 
 function jack_env() {
-    RAM=$(free | awk '/^Mem:/{ printf("%0.f", $2/(1024^2))}')
-    if [[ "$RAM" -lt 16 ]]; then
+	RAM=$(free | awk '/^Mem:/{ printf("%0.f", $2/(1024^2))}')
+	if [[ "$RAM" -lt 16 ]]; then
 	    export JACK_SERVER_VM_ARGUMENTS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx$(($RAM-1))G"
-    fi
+	fi
 }
 
 ################
@@ -713,14 +773,6 @@ done
 
 if [[ -n "$mainrepo" && ! ("${#variant_codes[*]}" -eq 0) ]]; then
 	say_welcome
-fi
-
-python=$(python -V 2>&1 || true)
-if [[ "$python" == *"3."* ]]; then
-	if [ ! -d .venv ]; then
-		virtualenv2 .venv
-	fi
-	. .venv/bin/activate
 fi
 
 read -p "- Do you want to sync? (y/N) " choice
