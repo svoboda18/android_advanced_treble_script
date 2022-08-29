@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Copyright (C) 2017 Nathan Chancellor
-# Copyright (C) 2019 SaMad SegMne
+# Copyright (C) 2019-2022 SaMad SegMne
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+set -e
+trap 'reportError "An unexpected error occurred!" _' ERR
 
 ###########
 #         #
@@ -23,10 +25,9 @@
 #         #
 ###########
 
+#
 # PURPOSE: Merge GSI patches and changes from phhusson git into your rom repos
 #
-# USAGE: $ bash apply_patches.sh -h
-
 
 ############
 #          #
@@ -94,35 +95,27 @@ COMMON_REPOS="bionic packages/apps/Settings"
 EXTRA_REPOS="bootable/recovery"
 NEW_REPOS="packages/apps/Bluetooth system/extras system/linkerconfig system/nfc"
 
-if [[ ! $# -ge 2 ]]; then
-    reportError "Source directory/Branch not specified!"
+if [[ ! $# -eq 2 ]]; then
+    help_menu && exit 1
 fi
 
-while [[ $# -ge 2 ]]; do
-    case "$1" in
-        "-h"|"--help")
-            help_menu && exit ;;
-        *)
-            SOURCE_DIR=${1}
-            BRANCH_VERSION=${2}
-            if [[ ! -d ${SOURCE_DIR} ]]; then
-                reportError "Source directory not found!"
-            elif [[ ! -d ${SOURCE_DIR}/.repo ]]; then
-                reportError "This is not a valid Android source folder as there is no .repo folder!"
-            fi ;;
-    esac
+SOURCE_DIR=${1}
+BRANCH_VERSION=${2}
+if [[ ! -d ${SOURCE_DIR} ]]; then
+    reportError "Source directory not found!"
+elif [[ ! -d ${SOURCE_DIR}/.repo ]]; then
+    reportError "This is not a valid Android source folder as there is no .repo folder!"
+fi
 
-    case "${BRANCH_VERSION}" in
-        android-8.1) REPOS="build system/libvintf system/sepolicy ${BASE_REPOS}";;
-        android-9.0) REPOS="build frameworks/opt/net/wifi packages/services/Telephony system/sepolicy system/libvintf ${BASE_REPOS} ${COMMON_REPOS}";;
-        android-10.0) REPOS="build packages/services/Telephony external/skia frameworks/opt/net/wifi system/bpf system/sepolicy ${BASE_REPOS} ${COMMON_REPOS} ${EXTRA_REPOS}";;
-        android-11.0) REPOS="external/skia frameworks/opt/net/wifi packages/services/Telephony system/memory/lmkd ${BASE_REPOS} ${COMMON_REPOS} ${EXTRA_REPOS} ${NEW_REPOS}";;
-        android-12.1) REPOS="frameworks/opt/net/ims hardware/interfaces packages/modules/Wifi system/bpf system/security ${BASE_REPOS} ${COMMON_REPOS} ${EXTRA_REPOS} ${NEW_REPOS}";;
-        *) reportError "Unknown android tag ($2)";;
-    esac
-
-    shift
-done
+case "${BRANCH_VERSION}" in
+    android-8.1) REPOS="build system/libvintf system/sepolicy ${BASE_REPOS}";;
+    android-9.0) REPOS="build frameworks/opt/net/wifi packages/services/Telephony system/sepolicy system/libvintf ${BASE_REPOS} ${COMMON_REPOS}";;
+    android-10.0) REPOS="build packages/services/Telephony external/skia frameworks/opt/net/wifi system/bpf system/sepolicy ${BASE_REPOS} ${COMMON_REPOS} ${EXTRA_REPOS}";;
+    android-11.0) REPOS="external/skia frameworks/opt/net/wifi packages/services/Telephony system/memory/lmkd ${BASE_REPOS} ${COMMON_REPOS} ${EXTRA_REPOS} ${NEW_REPOS}";;
+    android-12.1) REPOS="frameworks/opt/net/ims hardware/interfaces packages/modules/Wifi system/bpf system/security ${BASE_REPOS} ${COMMON_REPOS} ${EXTRA_REPOS} ${NEW_REPOS}";;
+    android-*.*) reportError "Unsupported android tag ($2)";;
+    *) reportError "Unknown tag format ($2)";;
+esac
 
 unset RESULT_STRING
 
@@ -134,9 +127,9 @@ unset RESULT_STRING
 
 # START TRACKING TIME
 START=$( date +%s )
-# SET BRANCH NAME (might break in future android sources :0)
-BRANCH=$( git ls-remote https://github.com/phhusson/platform_frameworks_base | awk -F'/' "(match(\$3, /^${BRANCH_VERSION}.0_r([0-9]+)(-r[0-9]+)?-phh$/, r) && r[1]>m) { m=r[1]; l=\$3 } END { print l }" )
-# ABORT IF NO BRANCHE WAS MATCHED
+# SET BRANCH NAME (might break in future :0)
+BRANCH=$( git ls-remote https://github.com/phhusson/platform_frameworks_base | awk -F'/' "(match(\$3, /^${BRANCH_VERSION}\.0_r([0-9]+)(-r[0-9]+)?-phh$/, r) && r[1]>m) { m=r[1]; l=\$3 } END { print l }" )
+# ABORT IF NO BRANCH WAS MATCHED
 [ -z "$BRANCH" ] && reportError "Failed to fetch upstream branch!"
 
 echo -e "Targeting: \n\t  ${YLW}$(echo ${REPOS} | sed -e 's/\(\w\+\)\s/\1\n\t  /g') ${RST}\nfrom branch: \n\t  ${GRN}${BRANCH}${RST}"
@@ -151,9 +144,9 @@ for FOLDER in ${REPOS}; do
 
     if [[ ${FOLDER} = "build" ]]; then
         # build is build/make
-	echo cd ${FOLDER}/make
+        cd ${FOLDER}/make
     else
-        echo cd ${FOLDER}
+        cd ${FOLDER}
     fi
 
     # SET PROPER URL
@@ -168,7 +161,6 @@ for FOLDER in ${REPOS}; do
     HEAD_HASH=$( eval git log -1 ${GIT_OPTIONS} )
 
     # TAIL HASH WILL BE THE **FIRST** THING PHH COMMITTED
-    # NO NEED TO MINUS 1
     NUMBER_OF_COMMITS=$( eval git log ${GIT_OPTIONS} | wc -l )
     
     if [[ "${NUMBER_OF_COMMITS}" -eq 0 ]]; then
@@ -177,7 +169,7 @@ for FOLDER in ${REPOS}; do
          continue
     fi
   
-    # NOW, SET TAIL_HASH WITH POSITIVE ${NUMBER_OF_COMMITS}
+    # NOW, SET TAIL_HASH
     TAIL_HASH=$( eval git log ${GIT_OPTIONS}~${NUMBER_OF_COMMITS}^..FETCH_HEAD~${NUMBER_OF_COMMITS} )
     
     # TAIL HASH CRYING?
@@ -191,9 +183,10 @@ for FOLDER in ${REPOS}; do
     echo -e "${GRN}Applying ${NUMBER_OF_COMMITS} patch(es)${RST}:\n from: ${FIRST_COMMIT_MSG}\n to:   ${LAST_COMMIT_MSG}"
 
     # PICK THE COMMITS
+    # ON ERROR CONTINUE
     CHERRY_PICK="${TAIL_HASH}^..${HEAD_HASH}"
-    [  "${TAIL_HASH}" == "${HEAD_HASH}" ] && CHERRY_PICK="${TAIL_HASH}"
-    eval git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers ${CHERRY_PICK}
+    [[ ${NUMBER_OF_COMMITS} -eq 1 ]] && CHERRY_PICK="${TAIL_HASH}"
+    eval git cherry-pick --allow-empty-message --keep-redundant-commits -X thiers ${CHERRY_PICK} || true
 
     # ADD TO RESULT STRING
     if [[ $? -ne 0 ]]; then
@@ -218,5 +211,5 @@ echo -e ${RESULT_STRING}
 END=$( date +%s )
 
 # PRINT RESULT TO USER
-printText "SCRIPT COMPLETED!"
+printText "PATCHING COMPLETED!"
 echo -e ${RED}"TIME: $(format_time ${END} ${START})"${RST}; newLine

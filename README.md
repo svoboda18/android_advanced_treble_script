@@ -2,14 +2,14 @@
 
 ## Info:
 * This script is a custom version of ``build-dakkar`` from [here](https://github.com/phhusson/treble_experimentations), With lot of optimizations, fixes, improvemets and more features.
-- **Current Version:** V1.5 (STABLE)
+- **Current Version:** V2
 - **Current Stable Version:** 1.5
 - **Current Features:**
    * Automaticly sync, patch and build!:
       - Faster and stable syncing.
-      - Patching from HEAD, always updated, no fails.
+      - Patching from HEAD, always updated.
       - Prompting and take user choice for every step.
-   * Fixes some common build errors, lot of roms are supported!
+   * Fixes some common build errors, lot of roms are supported! (not for all android versions)
 
 ## Usage Info:
 - Make a folder (sperated location from where this tool is cloned) of the ROM you want to collect.
@@ -20,6 +20,7 @@
 - Run ``bash adv-build.sh --help`` for commend syntax guide.
 
 ## Aknowledgement:
-- phhusson
-- EnesSastim
-- nathanchance
+| User |
+| ---- |
+| phhusson |
+| nathanchance (base apply-patches code) |

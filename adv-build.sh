@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (C) 2019 by SaMad SegMane (svoboda18)
+# Copyright (C) 2019-2022 by SaMad SegMane (svoboda18)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses
 #
-
-set -e -E
-trap 'reportError "An unexpected error occurred!"' ERR
+set -eE
+trap 'reportError "An unexpected error occurred!" _' ERR
+shopt -s extglob
 
 ###############
 #             #
@@ -33,6 +33,7 @@ RED="\033[01;31m"
 YLW="\033[01;33m"
 RST="\033[0m"
 VER=2
+YES=false
 
 ###############
 #             #
@@ -53,9 +54,10 @@ function reportError() {
 	echo -e ""
 	echo -e ${RED}"${1}"${RST} 
 	echo -e ""
+	trap - ERR
+	[ -n "$2" ] && exit 1
 	echo -e ${GRN}"Run \"bash $myname --help\" for usage information."${RST} 
 	echo -e ""
-	trap - ERR
 	exit 1
 }
 
@@ -63,8 +65,12 @@ function reportWarning() {
 	echo -e ${YLW}"${1}"${RST}
 }
 
-function say_welcome() {
+function reportMessage() {
+	read -t 10 -ep "$1";
+	[[ "$REPLY" =~ ^(y|Y).?.?$ ]] && YES=true || YES=false
+}
 
+function say_welcome() {
 printText "× ADVANCED GSI IMAGE BUILD SCRIPT $VER ×"
 
 sleep 0.8s
@@ -88,23 +94,20 @@ fi
 }
 
 function help() {
-cat <<EOF
-Advanced GSI ROM Builder Script v$VER by SaMad SegMane (svoboda18)
-
-Usage Help:
-
+echo -e "${BLD}Advanced GSI ROM Builder Script v$VER by SaMad SegMane (svoboda18)\n
 Syntax:
+  $myname${RST} [options..] <rom type> <variant> [<variant2>...]
 
-  bash $myname [-j <number of threads>] <rom type> <variant> [<variant2> <variant3>..]
-  []: that options are optional.
-  <>: that options are required.
-
+  Symbol [...] signify optional arguments, and <...> signifies required ones.
+  
+  Each variant will be built respectivly to the arguments order, with unique fingerprint, variant duplications are ignored and the output is set inside "release" folder created in the working directory.
+${BLD}
 Options:
-
-  -j number of parallel make workers (defaults to $jobs)
-
+${RST}
+  -j <N>,--jobs <N>,j=N,--jobs=N\t\tnumber of threads used. (defaults to $jobs)
+${BLD}
 ROM types:
-
+${RST}
   aosp81
   aosp90
   aosp100
@@ -147,28 +150,37 @@ ROM types:
   slim90
   xpe81
   xpe90
-
+${BLD}
+Variants syntax:
+${RST}
 Variants are dash-joined combinations of (in order):
 - Processor type
-  * "arm" for ARM 32 bit
+  * "arm" for ARM 32 bit (android 11 and below)
   * "arm64" for ARM 64 bit
   * "a64" for ARM 32 bit system with 64 bit binder
 - A or A/B partition layout ("aonly" or "ab")
+  * "aonly" only available for android 10 and below.
 - GApps selection
-  * "vanilla" to not include GApps
-  * "gapps" to include opengapps
-- SU selection 
+  * "vanilla" to not include GApps.
+  * "gapps" to include gapps.
+  * "gappsgo" to include go gapps.
+  * "foss" to include foss apps.
+! SU selection (android 9 and below)
   * "su" with root permissions
   * "nosu" without root permissions
 - Build variant selection (optional)
-  * "eng" for eng build
-  * "user" for prod build (some errors are expected)
-  * "userdebug" for debug build (default)
+  * "eng" for eng build.
+  * "user" for prod build (some errors are expected).
+  * "userdebug" for debug build (default).
+${BLD}
+Note:
+${RST}
+* For secure, vndk-lite and a-only builds for andorid 11, use scripts
+located in repo "sas-creator" folder.
 
 Examples:
 - GSI ROM for ARM-A without Gapps and SU:
-  * arm-aonly-vanilla-nosu
-EOF
+  * arm-aonly-vanilla-nosu"
 }
 
 function get_rom_type() {
@@ -487,7 +499,7 @@ function get_rom_type() {
 	            extra_make_options="WITHOUT_CHECK_API=true"
 	            ;;
 		*)
-		    reportError "Unknown ROM type: $([ -z $1 ] && echo \(null\) || echo $1)"
+		    reportError "Unknown ROM type: $1"
 		    ;;
 	    esac
 }
@@ -497,45 +509,62 @@ function parse_variant() {
 	partition_layout_map[aonly]=a
 	partition_layout_map[ab]=b
 
-	local -A gapps_selection_map
-	gapps_selection_map[vanilla]=v
-	gapps_selection_map[gapps]=g
+	local -A apps_selection_map
+	apps_selection_map[vanilla]=v
+	apps_selection_map[gapps]=g
+	apps_selection_map[gappsgo]=o
+	apps_selection_map[foss]=f
 
 	local -A su_selection_map
 	su_selection_map[su]=S
 	su_selection_map[nosu]=N
-	
-	local -a pieces
-	IFS=- pieces=( $1 )
 
+	IFS=-
+	local -a pieces=( $1 )
+	local nb_pieces=(${#pieces[*]}-1)
 	local processor_type=${pieces[0]}
 	local partition_layout=${partition_layout_map[${pieces[1]}]}
-	local gapps_selection=${gapps_selection_map[${pieces[2]}]}
+
+	local apps_selection=${apps_selection_map[${pieces[2]}]}
 	local su_selection=${su_selection_map[${pieces[3]}]}
-	local build_type_selection=${pieces[4]}
-	
-	if [[ -z "$processor_type" || -z "$partition_layout" || -z "$gapps_selection" || -z "$su_selection" ]]; then
-	   >&2 reportError "Invalid defined variant: $1"
+	local build_type_selection=${pieces[$nb_pieces]}
+
+	if [[ -z "$processor_type" || -z "$partition_layout" || -z "$apps_selection" ]] ||
+	   [[ $(get_android_version) -gt 10 && "$partition_layout" == "a" ]] ||
+	   [[ $(get_android_version) -gt 11 && "$processor_type" == "arm" ]] ||
+	   [[ $(get_android_version) -gt 9 && -n "$su_selection" ]] ||
+	   [[ $(get_android_version) -le 9 && -z "$su_selection" ]]; then
+		>&2 reportError "Invalid defined variant: $1 (android version $(get_android_version))"
 	fi
 
-	echo "treble_${processor_type}_${partition_layout}${gapps_selection}${su_selection}-${build_type_selection}"
+	[[ $(get_android_version) -gt 9 ]] && su_selection="S"
+
+	echo "treble_${processor_type}_${partition_layout}${apps_selection}${su_selection}-${build_type_selection}"
 }
 
 function get_variants() {
 	declare -a -g variant_codes
 	declare -a -g variant_names
+	declare -A -g variants_map
 	    
+	local -A build_map
+	build_map[android-12.1]=squeak
+	build_map[android-11.0]=roar
+	build_map[android-10.0]=quack
+	build_map[android-9.0]=pie
+	build_map[android-8.1]=oreo
+
+	local idx=${#variant_codes[*]}
+
+	variant_names[$idx]="${build_map[$localManifestBranch]}-$1"
+	variants_map["$1"]=$idx
+
 	case "$1" in
-	    *-*-*-*-*)
-		variant_codes[${#variant_codes[*]}]=$(parse_variant "$1")
-		variant_names[${#variant_names[*]}]="$1"
-	        ;;
-	    *-*-*-*)
-		variant_codes[${#variant_codes[*]}]=$(parse_variant "$1-userdebug")
-	        variant_names[${#variant_names[*]}]="$1"
-	        ;;
-	    *) reportError "Invalid defined variant: $1"
-	        ;;
+	    *-*-*-*-*|*-*-*-[ue]*)
+		variant_codes[$idx]=$(parse_variant "$1");;
+	    *-*-*-*|*-*-*)
+		variant_codes[$idx]=$(parse_variant "$1-userdebug");;
+	    *) reportError "Invalid defined variant: $1";;
 	esac
 }
 
@@ -550,7 +579,7 @@ function init_main_repo() {
 function force_clone() {
 	local dir="$1"
 	local repo="$2"
-	
+
 	[ -d "$dir" ] && rm -rf "$dir"
 	git clone https://github.com/phhusson/"$repo" "$dir" -b "$( ([[ -z $3 ]] && echo $localManifestBranch) || echo $3)"
 }
@@ -559,11 +588,10 @@ function g_clone() {
 	local brn="$3"
 	local dir="$2"
 	local repo="$1"
-	local lfs=$( [[ "$(get_android_version)" -le 9 ]] && echo true || echo false )
-	
+
 	[ -d "$dir" ] && rm -rf "$dir"
-	git clone --depth=1 "$repo" "$dir" "$brn"
-	$lfs && (cd "$dir"; git lfs fetch && git lfs checkout)
+	git -c advice.detachedHead=false clone --depth=1 $([ -n "$brn" ] && echo "--branch $brn") "$repo" "$dir"
+	[ "$(get_android_version)" -le 9 ] && (cd "$dir"; git lfs fetch && git lfs checkout)
 }
 
 function get_android_version() {
@@ -575,40 +603,47 @@ function init_local_manifest() {
 	local interfaces_branch="master"
 	local device_branch="${localManifestBranch}"
 	local vndk_branch="master"
-	local magsik_branch="master"
+	local magisk_branch="master"
+	local vndk_path="vendor/vndk"
+	local sas_target=false
 	local magisk_target=false
-	local vndk_target=true
 	local lptools_target=false
 	local android_version=$(get_android_version)
-	
+
 	if [[ "${android_version}" -ge 9 ]]; then
 	     overlay_branch="pie"
 	     interfaces_branch="pie"
-	     magsik_target=true
-	     if [[ "${android_version}" -eq 10 ]]; then
+	     magisk_target=true
+	     if [[ "${android_version}" -ge 10 ]]; then
 	        vndk_branch="android-10.0"
-		magsik_branch="android-10.0"
-	     elif [[ "${android_version}" -ge 11 ]]; then
-	         # no vndk here
-	         vndk_target=false
-	         interfaces_branch="android-11.0"
+		magisk_branch="android-10.0"
+	        if [[ "${android_version}" -ge 11 ]]; then
+	           sas_target=true
+	           vndk_path=phh_sas
+	           interfaces_branch="android-11.0"
 	         
-	         if [[ "${android_version}" -eq 12 ]]; then
-	            device_branch="android-12.0"
-		    lptools_target=true
-	         fi 
+	           if [[ "${android_version}" -eq 12 ]]; then
+	              device_branch="android-12.0"
+		      lptools_target=true
+		   fi
+		fi
 	     fi
 	fi
 	force_clone device/phh/treble device_phh_treble ${device_branch}
-	$vndk_target && force_clone vendor/vndk vendor_vndk ${vndk_branch}
 	force_clone vendor/hardware_overlay vendor_hardware_overlay ${overlay_branch}
 
 	force_clone vendor/interfaces vendor_interfaces ${interfaces_branch}
 	force_clone vendor/vndk-tests vendor_vndk-tests master
-	$magisk_target && force_clone vendor/magsik vendor_magisk ${magisk_branch}
+	force_clone vendor/gapps-go gapps-go master
+	force_clone vendor/foss vendor_foss master
+	force_clone ${vndk_path} vendor_vndk ${vndk_branch}
+	g_clone https://gitlab.com/fdroid/privileged-extension.git packages/apps/FDroidPrivilegedExtension 0.2.7 || true
+	$sas_target && force_clone phh_sas sas-creator master
+	$magisk_target && force_clone vendor/magisk vendor_magisk ${magisk_branch}
 	$lptools_target && force_clone vendor/lptools vendor_lptools master
-	read -p "- Do you want to sync gapps packages? (y/N) " g
-	if [[ $g == *"y"* ]];then
+
+	reportMessage "- Do you want to sync gapps packages? (y/N) "
+	if $YES;then
 	    if [[ "${android_version}" -le 9 ]]; then
 		g_clone https://github.com/opengapps/aosp_build vendor/opengapps/build
 		g_clone https://gitlab.opengapps.org/opengapps/all vendor/opengapps/sources/all
@@ -621,7 +656,6 @@ function init_local_manifest() {
 		g_clone https://gitlab.com/00p513-dev/partner_gms vendor/partner_gms 11
 	    elif [[ "${android_version}" -eq 12 ]]; then
 		g_clone https://gitlab.com/davi.sh/gms-android-12 vendor/partner_gms
-		# add revision
 	    fi
 	fi
 }
@@ -657,70 +691,76 @@ function patch_things() {
 	if [ "${android_version}" -eq 12 ] && grep -q lottie packages/apps/Launcher3/Android.bp; then
 	    [ -d vendor/partner_gms ] && (cd vendor/partner_gms; wget --output-document=search.patch https://github.com/phhusson/treble_experimentations/raw/master/0001-Fix-SearchLauncher-for-Android-12.1.patch; git am search.patch || true)
 	fi
-	cd device/phh/treble
-	git clean -fdx
-	[ -n "$treble_generate" ] && bash generate.sh "$treble_generate" || bash generate.sh
-	cd ../../..
+	(cd device/phh/treble; git clean -fdx; bash generate.sh "$treble_generate")
 	. ./"$(dirname "$0")/apply-patches.sh" "$repodir" "$localManifestBranch" | tee -a release/"$rom_fp"/patch-"$rom_fp".log || false
 }
 
 function check_dex() {
-	read -p "* Do you want to disable pre-opt rom apps? (y/N) " dexa
-	if [[ "$dexa" == *"y"* ]]; then
-	        reportWarning "! Some roms, will not boot/built when pre-opt is disabled."
+	reportMessage "* Do you want to disable pre-opt rom apps? (y/N) "
+	if $YES; then
+	        reportWarning "! Disabling pre-opt results in slower first boot"
 		echo -e "
 WITH_DEXPREOPT := false 
 DISABLE_DEXPREOPT := true
 DONT_DEXPREOPT_PREBUILTS := true
 LOCAL_DEX_PREOPT := false" >> device/phh/treble/board-base.mk
 	else
-		cd device/phh/treble
-		git checkout -- board-base.mk
-		cd ../../..
+		(cd device/phh/treble; git checkout -- board-base.mk)
 	fi
 }
 
 function gen_mk() {
 	if [[ -n "$gen_mk" ]]; then
-	repo="${PWD}"
-	gen_lunch="${gen_mk}_${gen_target}"
-	[ "$localManifestBranch" != *"8"* ] && gen_mk="$gen_lunch"
-	cd device/phh/treble
-	rm -rf "$gen_mk.mk"
-	    cat << EOF >> $gen_mk.mk
-`[ -n "$gen_config" ] && echo "$gen_config"`
-`[ -n "$gen_sepolicy" ] && echo "$gen_sepolicy"`
+	   declare -g gen_lunch="${gen_mk}_${gen_target}"
+	   local gen="${gen_mk}"
+	   [ $(get_android_version) -gt 8 ] && gen="$gen_lunch"
+	   (cd device/phh/treble;
+	   cat << EOF > $gen.mk
+$gen_config
+$gen_sepolicy
 `cat $target_name.mk`
 EOF
-	    sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_lunch}@" -i $gen_mk.mk
-	    sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_lunch}@" -i $gen_mk.mk
-	    sed "s@${target_name}@${gen_lunch}@" -i AndroidProducts.mk
-	cd "$repo"
+	   cat << EOF >> AndroidProducts.mk
+PRODUCT_MAKEFILES += \\
+	\$(LOCAL_DIR)/$gen.mk
+COMMON_LUNCH_CHOICES := \\
+	${gen_lunch}-${build_type}
+EOF
+           sed "s@PRODUCT_NAME.*@PRODUCT_NAME := ${gen_lunch}@" -i $gen.mk)
+	   #sed "s@PRODUCT_MODEL.*@PRODUCT_MODEL := ${gen_lunch}@" -i $gen.mk
 	fi
 }
 
 function build_variant() {
-	read -p "* Do you want to clean before starting build? (y/N) " choicer
-	if [[ $choicer == *"y"* ]];then
+	reportMessage "* Do you want to clean before starting build? (y/N) "
+	if $YES; then
 	    make installclean
 	fi
-	[[ -n "$gen_lunch" ]] && lunch "$gen_lunch"-userdebug || lunch "$1"
+	[[ -n "$gen_lunch" ]] && lunch "$gen_lunch"-"$build_type" || lunch "$1"
 	make $extra_make_options BUILD_NUMBER="$rom_fp" -j "$jobs" systemimage
 	make $extra_make_options BUILD_NUMBER="$rom_fp" vndk-test-sepolicy
-	
-	[ -f "$OUT"/system.img ] && {
-		echo -e "* ROM built sucessfully (release/$rom_fp)"
-		cp "$OUT"/system.img release/"$rom_fp"/$rom_type-system-"$2".img 
 
-		read -p "* Do you want to compress the built gsi? (y/N) " zipch
-			if [[ $zipch == *"y"* ]]; then
-				cd r*/"$rom_fp" ; zip -r9 $rom_type-$target_name-"$rom_fp".zip $rom_type-*.img 2>/dev/null
-	    	fi
-		read -p "* Do you want to upload the built gsi? (y/N) " up
-			if [[ $up == *"y"* ]]; then
-			gdrive upload --share $rom_type-$target_name-"$rom_fp".zip || echo "Please, install gdrive tool!"
-			fi
-	} || reportError "BUILD HAS FAILED !"
+	[ ! -f "$OUT"/system.img ] && reportError "! BUILD FAILED" _
+
+	echo -e "* ROM built sucessfully (release/$rom_fp)"
+
+	# TO-DO
+	#reportMessage "* Do you want to securize the built gsi? (y/N) "
+	#if $YES; then
+	#	(cd phh-sas; bash securize.sh "$OUT"/system.img)
+	#fi
+
+	cp "$OUT"/system.img release/"$rom_fp"/"$rom_type"-system-"$2".img
+
+	reportMessage "* Do you want to compress the built gsi? (y/N) "
+	if $YES; then
+	    cd release/"$rom_fp"; zip -r9 $rom_type-$target_name-"$rom_fp".zip $rom_type-*.img 2>/dev/null
+	fi
+
+	reportMessage "* Do you want to upload the built gsi? (y/N) "
+	if $YES; then
+	    gdrive upload --share $rom_type-$target_name-"$rom_fp".zip || echo "Please, install gdrive tool!"
+	fi
 }
 
 function jack_env() {
@@ -736,77 +776,67 @@ function jack_env() {
 #              #
 ################
 
+function set_jobs_number() {
+    [[ "$1" =~ ^[0-9]+$ ]] && jobs=$1 || reportError "Not a jobs number: $([[ -z $1 ]] && echo "(null)" || echo $1)"
+}
+
 prepre_env
 
-if [[ "$1" == "-j" ]]; then
-	re='^[0-9]+$'
-	if [[ "$2" =~ "$re" ]] ; then
-		jobs="$2"
-		rom_type="$3"
-		targets="$(($#-3))"
-		start=3
-	else
-		reportError "Not a jobs number: $([[ -z $2 ]] && echo \(null\) || echo $2)"
-	fi
-else
-	rom_type="$1"
-	targets="$(($#-1))"
-	start=1
-fi
-
-if [[ "$1" == "--help" ]]; then
-	help
-	exit 1
-fi
-
-get_rom_type "$rom_type"
-
-count=0
-while [[ "$count" != "$targets" ]]; do
-	count="$((count+1))"
-	variant="$((count+start))"
-	bvariant="$((variant-1))"
-	[ "${!variant}" != "${!bvariant}" ] && get_variants "${!variant}"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help) help; exit 1 ;;
+        -j|--jobs) shift; set_jobs_number "$1";;
+	-j=*|--jobs=*) set_jobs_number "${1#*=}";;
+        *-*) [ -z "${variants_map["$1"]}" ] && get_variants "$1";;
+        *) [ -z "$mainrepo" ] && get_rom_type "$1";;
+    esac
+    shift
 done
 
-[[ -z "$variant" ]] && reportError "Invalid defined variant: (null)"
-
-if [[ -n "$mainrepo" && ! ("${#variant_codes[*]}" -eq 0) ]]; then
-	say_welcome
+if [ -z "$mainrepo" ]; then
+    reportError "Unknown ROM type: (null)"
+elif [[ "${#variant_codes[*]}" -eq 0 ]]; then
+    reportError "Invalid defined variant: (null)"
 fi
 
-read -p "- Do you want to sync? (y/N) " choice
-if [[ "$choice" == *"y"* ]]; then
-	read -p "* Do you want to clean before sync? (y/N) " choicec
-	if [[ $choicec == *"y"* ]]; then
-		clean_repo_folder
+echo "Using jobs: $jobs"
+
+say_welcome
+
+reportMessage "- Do you want to sync? (y/N) "
+if $YES; then
+	reportMessage "* Do you want to clean before sync? (y/N) "
+	if $YES; then
+	    clean_repo_folder
 	fi
 	init_main_repo
 	init_release
 	sync_repo
 	init_local_manifest
 else
-	[ ! -d ".repo" ] && reportWarning "! ROM sources cannot be found. Unexpected errors can be."
+	[ ! -d ".repo" ] && reportWarning "! ROM sources cannot be found."
 fi
 
-read -p "- Do you want to patch? (y/N) " choice2
-if [[ $choice2 == *"y"* ]]; then
+reportMessage "- Do you want to patch? (y/N) "
+if $YES; then
 	fix_missings
 	add_mks
 	patch_things
 else
-	reportWarning "! Without patching, ROM will not work."
+	reportWarning "! Patching is required, if this is the first time build."
 fi
 
-read -p "- Do you want to start build now? (y/N) " choice3
-if [[ $choice3 == *"y"* ]]; then
+reportMessage "- Do you want to start build now? (y/N) "
+if $YES; then
 	check_dex
 	jack_env
 	init_release
-	source build/envsetup.sh 2>&1
+	source build/envsetup.sh 2>&1 || false
 	for (( idx=0; idx < ${#variant_codes[*]}; idx++ )); do
-	    target_name=$(echo "${variant_codes[$idx]}" | sed 's@-.*@@')
-	    gen_mk	
+	    declare -g target_name=${variant_codes[$idx]%-*}
+	    declare -g build_type=${variant_codes[$idx]#*-}
+	    gen_mk
+
 	    printText "Building process started ($((1+$idx))/${#variant_codes[*]})"
 	    build_variant "${variant_codes[$idx]}" "${variant_names[$idx]}"
 	done
